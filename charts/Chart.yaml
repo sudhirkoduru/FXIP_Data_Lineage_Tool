@@ -1,0 +1,13 @@
+apiVersion: v2
+name: fxip-data-lineage-tool
+description: FXIP Data Lineage Tool — interactive visualization of FXIP APIs, Processors, Adapters, Kafka flows, and external integrations
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - fxip
+  - data-lineage
+  - react
+home: https://github.com/AAInternal/FXIP_Data_Lineage_Tool
+maintainers:
+  - name: FXIP Platform Team

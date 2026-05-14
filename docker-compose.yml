@@ -1,0 +1,16 @@
+services:
+  fxip-data-lineage-tool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: docker.aa.com/nonprod/fxip/fxip-data-lineage-tool:local
+    container_name: fxip-data-lineage-tool
+    ports:
+      - "3000:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

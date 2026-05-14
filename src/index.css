@@ -1,0 +1,37 @@
+/* American Airlines brand theme */
+:root {
+  --aa-navy:    #0C2340;
+  --aa-red:     #ED1C2E;
+  --aa-sky:     #009FDA;
+  --aa-bg:      #071428;
+  --aa-surface: #071a33;
+  --aa-border:  #0d2a4a;
+  --aa-text:    #e2e8f0;
+  --aa-muted:   #4B6E8B;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--aa-bg);
+  color: var(--aa-text);
+}
+
+button { font-family: inherit; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--aa-surface); }
+::-webkit-scrollbar-thumb { background: #1a3a5c; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2a5070; }
+
+/* ReactFlow overrides */
+.react-flow__controls button {
+  background: #0d2a4a;
+  border-color: #1a3a5c;
+  color: #7BAFD4;
+}
+.react-flow__controls button:hover { background: #1a3a5c; }
+.react-flow__controls-fitview::before { color: #7BAFD4; }

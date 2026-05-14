@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: docker.aa.com/nonprod/fxip/fxip-data-lineage-tool
+  tag: "dev"
+  pullPolicy: Always
+
+ingress:
+  enabled: true
+  hosts:
+    - host: fxip-lineage.dev.internal.aa.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: fxip-lineage-dev-tls
+      hosts:
+        - fxip-lineage.dev.internal.aa.com
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
