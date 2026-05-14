@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -6,177 +6,290 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   MarkerType,
+  Handle,
+  Position,
 } from 'reactflow';
 import type { Node, Edge, NodeTypes } from 'reactflow';
 import 'reactflow/dist/style.css';
-import {
-  services,
-  kafkaTopics,
-  externalSystems,
-  NODE_COLORS,
-} from '../data/lineage';
+import { services, kafkaTopics, externalSystems, NODE_COLORS } from '../data/lineage';
 import type { NodeType } from '../data/lineage';
 
-interface GraphProps {
-  filter: string[];
-  searchTerm: string;
-  onNodeClick: (node: Node) => void;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPLICIT POSITIONS — mirroring FXIP Integration Context View diagram
+// Layout: AWS Cloud (top) → Azure Services → Kafka Backbone → On-Prem (bottom)
+// ─────────────────────────────────────────────────────────────────────────────
+const CANVAS_W = 2080;
 
-// ── Custom node component ────────────────────────────────────────────────────
-const ServiceNode = ({ data }: { data: { label: string; acronym: string; type: string; color: string; appName: string } }) => (
-  <div
-    className="service-node"
-    style={{
-      background: data.color,
-      border: '2px solid rgba(255,255,255,0.2)',
-      borderRadius: '10px',
-      padding: '10px 14px',
-      minWidth: 140,
-      maxWidth: 180,
-      textAlign: 'center',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      color: '#fff',
-    }}
-  >
-    <div style={{ fontSize: '10px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-      {data.type}
-    </div>
-    <div style={{ fontSize: '13px', fontWeight: 700, marginTop: 2 }}>{data.acronym}</div>
-    <div style={{ fontSize: '10px', opacity: 0.85, marginTop: 2, lineHeight: '1.3' }}>{data.label}</div>
-    <div style={{ fontSize: '9px', opacity: 0.6, marginTop: 4, fontFamily: 'monospace' }}>{data.appName}</div>
-  </div>
-);
+const POSITIONS: Record<string, { x: number; y: number }> = {
+  // ── AWS / Cloud External (y ≈ 60) ──────────────────────────────────────────
+  ConfluentCloud:              { x: 60,   y: 60  },
+  IBM_ACARS:                   { x: 340,  y: 60  },
+  FlightKeys:                  { x: 880,  y: 60  },
+  CCI:                         { x: 1300, y: 60  },
+  OpsTrak:                     { x: 1520, y: 60  },
+  Fusion:                      { x: 1740, y: 60  },
 
-const KafkaNode = ({ data }: { data: { label: string; group: string; format: string; brokerType: string } }) => (
-  <div
-    style={{
-      background: NODE_COLORS.kafka,
-      border: '2px solid rgba(255,255,255,0.2)',
-      borderRadius: '6px',
-      padding: '8px 12px',
-      minWidth: 220,
-      textAlign: 'center',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      color: '#fff',
-    }}
-  >
-    <div style={{ fontSize: '9px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-      Kafka Topic · {data.group}
-    </div>
-    <div style={{ fontSize: '11px', fontWeight: 700, marginTop: 2, fontFamily: 'monospace', wordBreak: 'break-all' }}>
+  // ── Azure: Adapters — column 1 (x ≈ 60) ───────────────────────────────────
+  FXD_SOAR_FlightData_Adapter:     { x: 60,  y: 290 },
+  FXD_SOAR_AircraftData_Adapter:   { x: 60,  y: 460 },
+  FXD_SOAR_ACARS_Cyberjet:         { x: 60,  y: 630 },
+  FXD_SOAR_Fusion_Flight_Movement: { x: 60,  y: 800 },
+
+  // ── Azure: Processors — columns 2-3 ───────────────────────────────────────
+  FXD_SOAR_Audit_Log_Processor:        { x: 300, y: 290 },
+  FXD_SOAR_FlightPlan_Processor:       { x: 300, y: 460 },
+  FXIP_FlightPlanServiceMGW_AWS:       { x: 300, y: 630 },
+  FXIP_AircraftDataServiceMGW_BCP:     { x: 300, y: 800 },
+
+  FXD_SOAR_Flightkeys_Event_Processor: { x: 520, y: 290 },
+  FXD_SOAR_Text_Message_Processor:     { x: 520, y: 460 },
+  FXD_SOAR_FOS_Update_Processor:       { x: 520, y: 630 },
+  FXD_SOAR_Notification_Service:       { x: 520, y: 800 },
+
+  // ── Azure: APIs — columns 4-6 ─────────────────────────────────────────────
+  FXD_SOAR_Flightkeys_Integration_Service: { x: 760,  y: 290 },
+  FXD_SOAR_FlightPlan_Service:             { x: 760,  y: 460 },
+  FXD_SOAR_Data_Maintenance_Service:       { x: 760,  y: 630 },
+  FXD_SOAR_PilotDoc_Service:               { x: 760,  y: 800 },
+
+  FXD_SOAR_Aircraft_Data_Service:          { x: 1020, y: 290 },
+  FXD_SOAR_Nav_Data_Service:               { x: 1020, y: 460 },
+  FXD_SOAR_DelayCost_Service:              { x: 1020, y: 630 },
+  FXIP_Flight_Info_Service_Client:         { x: 1020, y: 800 },
+
+  // ── Azure: Integration + MGW — column 7 ───────────────────────────────────
+  FXD_SOAR_Fusion_ACARS_Service:   { x: 1280, y: 290 },
+  FXIP_NavDataServiceMGW_BCP:      { x: 1280, y: 460 },
+  FXIP_DataMaintServiceMGW_BCP:    { x: 1280, y: 630 },
+  FXIP_FltKeysIntegServiceMGW_AWS: { x: 1280, y: 800 },
+
+  // ── On-Prem / External Sinks (y ≈ 1280) ───────────────────────────────────
+  IBM_MQ:          { x: 60,   y: 1280 },
+  RabbitMQ:        { x: 280,  y: 1280 },
+  FOS:             { x: 500,  y: 1280 },
+  AzureServiceBus: { x: 760,  y: 1280 },
+  DocumentDB:      { x: 1020, y: 1280 },
+  OpsHub:          { x: 1280, y: 1280 },
+};
+
+// Kafka topics grouped within the backbone lane (y ≈ 1020-1155)
+const KAFKA_GROUP_X: Record<string, number> = {
+  'flightplan':      60,
+  'flightplan-mq':   400,
+  'flightplan-ext':  760,
+  'acars':           1060,
+  'flight-event':    1240,
+  'flight-event-mq': 1240,
+  'maint-event':     1620,
+  'flightkeys-event':1820,
+};
+const KAFKA_Y_BASE = 1000;
+const KAFKA_ROW_H  = 58;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SWIMLANE BACKGROUND NODES
+// ─────────────────────────────────────────────────────────────────────────────
+interface LaneData { label: string; color: string; border: string; width: number; height: number }
+
+const LaneNode = ({ data }: { data: LaneData }) => (
+  <div style={{
+    width: data.width, height: data.height,
+    background: data.color,
+    border: `1.5px solid ${data.border}44`,
+    borderRadius: 12,
+    pointerEvents: 'none',
+  }}>
+    <div style={{
+      fontSize: 11, fontWeight: 800, letterSpacing: '1.5px',
+      textTransform: 'uppercase', color: data.border,
+      padding: '10px 18px', opacity: 0.85,
+    }}>
       {data.label}
     </div>
-    <div style={{ fontSize: '9px', opacity: 0.7, marginTop: 3 }}>
-      {data.format} · {data.brokerType}
+  </div>
+);
+
+const buildLanes = (): Node[] => [
+  {
+    id: 'lane-cloud', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
+    position: { x: -30, y: 20 },
+    data: { label: '☁  Amazon Web Services / External Cloud', color: '#FF990009', border: '#FF9900', width: CANVAS_W, height: 170 } as LaneData,
+  },
+  {
+    id: 'lane-azure', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
+    position: { x: -30, y: 210 },
+    data: { label: '☁  Microsoft Azure', color: '#0078D209', border: '#0078D2', width: CANVAS_W, height: 720 } as LaneData,
+  },
+  {
+    id: 'lane-kafka', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
+    position: { x: -30, y: 950 },
+    data: { label: '⚡  OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', color: '#ED1C2E09', border: '#ED1C2E', width: CANVAS_W, height: 225 } as LaneData,
+  },
+  {
+    id: 'lane-onprem', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
+    position: { x: -30, y: 1200 },
+    data: { label: '🏢  On-Premises / External Sinks', color: '#10B98109', border: '#10B981', width: CANVAS_W, height: 180 } as LaneData,
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CUSTOM NODE COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
+interface SvcData {
+  acronym: string; label: string; type: string; color: string;
+  appName: string; epCount: number; kafkaIn: number; kafkaOut: number; raw: unknown;
+}
+
+const ServiceNode = ({ data }: { data: SvcData }) => (
+  <div style={{
+    background: `linear-gradient(145deg, ${data.color}ee, ${data.color}99)`,
+    border: `2px solid ${data.color}`,
+    borderRadius: 10, padding: '9px 13px', minWidth: 165, maxWidth: 200,
+    boxShadow: `0 0 14px ${data.color}44, 0 4px 18px rgba(0,0,0,0.45)`,
+    color: '#fff', cursor: 'pointer', textAlign: 'center',
+  }}>
+    <Handle type="target" position={Position.Left}   style={{ background: '#ffffff55', border: 'none', width: 8, height: 8 }} />
+    <Handle type="target" position={Position.Top}    style={{ background: '#ffffff55', border: 'none', width: 8, height: 8 }} />
+    <Handle type="source" position={Position.Right}  style={{ background: '#ffffff55', border: 'none', width: 8, height: 8 }} />
+    <Handle type="source" position={Position.Bottom} style={{ background: '#ffffff55', border: 'none', width: 8, height: 8 }} />
+    <div style={{ fontSize: 9, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.8px' }}>{data.type}</div>
+    <div style={{ fontSize: 15, fontWeight: 800, margin: '3px 0 2px' }}>{data.acronym}</div>
+    <div style={{ fontSize: 10, opacity: 0.88, lineHeight: 1.3 }}>{data.label}</div>
+    <div style={{ fontSize: 9, opacity: 0.5, fontFamily: 'monospace', marginTop: 3 }}>{data.appName}</div>
+    <div style={{ display: 'flex', justifyContent: 'center', gap: 5, marginTop: 7, flexWrap: 'wrap' }}>
+      {data.epCount > 0 && (
+        <span style={{ background: '#ffffff20', borderRadius: 10, padding: '2px 7px', fontSize: 9 }}>
+          {data.epCount} REST
+        </span>
+      )}
+      {data.kafkaIn > 0 && (
+        <span style={{ background: '#7C3AED33', borderRadius: 10, padding: '2px 7px', fontSize: 9 }}>
+          ↓{data.kafkaIn} Kafka
+        </span>
+      )}
+      {data.kafkaOut > 0 && (
+        <span style={{ background: '#ED1C2E33', borderRadius: 10, padding: '2px 7px', fontSize: 9 }}>
+          ↑{data.kafkaOut} Kafka
+        </span>
+      )}
     </div>
   </div>
 );
 
-const ExternalNode = ({ data }: { data: { label: string; type: string; color: string } }) => (
-  <div
-    style={{
-      background: data.color,
-      border: '2px dashed rgba(255,255,255,0.4)',
-      borderRadius: '8px',
-      padding: '10px 14px',
-      minWidth: 140,
-      textAlign: 'center',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      color: '#fff',
-    }}
-  >
-    <div style={{ fontSize: '9px', opacity: 0.7, textTransform: 'uppercase' }}>{data.type}</div>
-    <div style={{ fontSize: '12px', fontWeight: 700, marginTop: 2 }}>{data.label}</div>
+interface KafkaData { label: string; group: string; format: string; brokerType: string; producers: number; consumers: number; raw: unknown }
+
+const KafkaNode = ({ data }: { data: KafkaData }) => (
+  <div style={{
+    background: 'linear-gradient(135deg, #991b1b, #7f1d1d)',
+    border: '1.5px solid #ED1C2E',
+    borderRadius: 6, padding: '5px 10px', minWidth: 215, maxWidth: 255,
+    boxShadow: '0 0 10px #ED1C2E44, 0 3px 10px rgba(0,0,0,0.5)',
+    color: '#fff', cursor: 'pointer', textAlign: 'center',
+  }}>
+    <Handle type="target" position={Position.Left}   style={{ background: '#ffffff55', border: 'none' }} />
+    <Handle type="target" position={Position.Top}    style={{ background: '#ffffff55', border: 'none' }} />
+    <Handle type="source" position={Position.Right}  style={{ background: '#ffffff55', border: 'none' }} />
+    <Handle type="source" position={Position.Bottom} style={{ background: '#ffffff55', border: 'none' }} />
+    <div style={{ fontSize: 8, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      {data.group} · {data.format}
+    </div>
+    <div style={{ fontSize: 10, fontWeight: 700, fontFamily: 'monospace', marginTop: 2, wordBreak: 'break-all', lineHeight: 1.3 }}>
+      {data.label}
+    </div>
+    <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 4 }}>
+      <span style={{ fontSize: 9, color: '#fca5a5' }}>↑ {data.producers} prod</span>
+      <span style={{ fontSize: 9, color: '#c4b5fd' }}>↓ {data.consumers} cons</span>
+    </div>
+  </div>
+);
+
+interface ExtData { label: string; type: string; color: string; raw: unknown }
+
+const ExternalNode = ({ data }: { data: ExtData }) => (
+  <div style={{
+    background: `${data.color}1a`,
+    border: `2px dashed ${data.color}`,
+    borderRadius: 8, padding: '8px 13px', minWidth: 145,
+    boxShadow: `0 0 10px ${data.color}33`,
+    color: '#fff', cursor: 'pointer', textAlign: 'center',
+  }}>
+    <Handle type="target" position={Position.Left}   style={{ background: '#ffffff55', border: 'none' }} />
+    <Handle type="target" position={Position.Top}    style={{ background: '#ffffff55', border: 'none' }} />
+    <Handle type="source" position={Position.Right}  style={{ background: '#ffffff55', border: 'none' }} />
+    <Handle type="source" position={Position.Bottom} style={{ background: '#ffffff55', border: 'none' }} />
+    <div style={{ fontSize: 9, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{data.type}</div>
+    <div style={{ fontSize: 12, fontWeight: 700, marginTop: 3 }}>{data.label}</div>
   </div>
 );
 
 const nodeTypes: NodeTypes = {
-  serviceNode: ServiceNode,
-  kafkaNode: KafkaNode,
-  externalNode: ExternalNode,
+  laneNode:     LaneNode as never,
+  serviceNode:  ServiceNode as never,
+  kafkaNode:    KafkaNode as never,
+  externalNode: ExternalNode as never,
 };
 
-// ── Layout helpers ────────────────────────────────────────────────────────────
-const COLS = 4;
-const ROW_GAP = 180;
-const COL_GAP = 230;
-
+// ─────────────────────────────────────────────────────────────────────────────
+// BUILD NODES
+// ─────────────────────────────────────────────────────────────────────────────
 function buildNodes(filter: string[], searchTerm: string): Node[] {
-  const nodes: Node[] = [];
+  const term = searchTerm.toLowerCase();
+  const nodes: Node[] = [...buildLanes()];
+  const matches = (...words: string[]) => !term || words.some(w => w.toLowerCase().includes(term));
 
-  // Group services by type for layout
-  const types: NodeType[] = ['api', 'processor', 'adapter', 'mgw', 'tool'];
-  services.forEach((svc, _i) => {
+  services.forEach(svc => {
     if (filter.length > 0 && !filter.includes(svc.type)) return;
-    if (searchTerm && !svc.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !svc.acronym.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !svc.description.toLowerCase().includes(searchTerm.toLowerCase())) return;
-
-    const group = types.indexOf(svc.type as NodeType);
-    const countInGroup = services.filter(s => s.type === svc.type).indexOf(svc);
-    const col = countInGroup % COLS;
-    const row = Math.floor(countInGroup / COLS);
-
+    if (!matches(svc.name, svc.acronym, svc.description, svc.appName)) return;
     nodes.push({
       id: svc.id,
       type: 'serviceNode',
-      position: {
-        x: col * COL_GAP + group * 30,
-        y: group * ROW_GAP * 2.5 + row * ROW_GAP,
-      },
+      position: POSITIONS[svc.id] ?? { x: 1540, y: 600 },
       data: {
-        label: svc.name,
-        acronym: svc.acronym,
-        type: svc.type.toUpperCase(),
-        color: NODE_COLORS[svc.type as NodeType],
-        appName: svc.appName,
+        acronym:  svc.acronym,
+        label:    svc.name,
+        type:     svc.type.toUpperCase(),
+        color:    NODE_COLORS[svc.type as NodeType],
+        appName:  svc.appName,
+        epCount:  svc.restEndpoints.length,
+        kafkaIn:  svc.kafkaConsumes.length,
+        kafkaOut: svc.kafkaProduces.length,
         raw: svc,
       },
     });
   });
 
-  // Kafka topics — only if not filtered out
   if (filter.length === 0 || filter.includes('kafka')) {
-    kafkaTopics.forEach((topic, i) => {
-      if (searchTerm && !topic.name.toLowerCase().includes(searchTerm.toLowerCase())) return;
-      const col = i % 5;
-      const row = Math.floor(i / 5);
+    const groupCounters: Record<string, number> = {};
+    kafkaTopics.forEach(topic => {
+      if (!matches(topic.name, topic.group)) return;
+      const gx = KAFKA_GROUP_X[topic.group] ?? 1820;
+      const gi = groupCounters[topic.group] ?? 0;
+      groupCounters[topic.group] = gi + 1;
       nodes.push({
         id: topic.id,
         type: 'kafkaNode',
-        position: {
-          x: col * 260 - 100,
-          y: 1400 + row * 110,
-        },
+        position: { x: gx, y: KAFKA_Y_BASE + gi * KAFKA_ROW_H },
         data: {
-          label: topic.name,
-          group: topic.group,
-          format: topic.format,
+          label:      topic.name,
+          group:      topic.group,
+          format:     topic.format,
           brokerType: topic.brokerType,
+          producers:  topic.producers.length,
+          consumers:  topic.consumers.length,
           raw: topic,
         },
       });
     });
   }
 
-  // External systems
   if (filter.length === 0 || filter.includes('external')) {
-    externalSystems.forEach((ext, i) => {
-      if (searchTerm && !ext.name.toLowerCase().includes(searchTerm.toLowerCase())) return;
+    externalSystems.forEach(ext => {
+      if (!matches(ext.name, ext.description)) return;
       nodes.push({
         id: ext.id,
         type: 'externalNode',
-        position: {
-          x: i * 200 - 100,
-          y: 2000 + Math.floor(i / 5) * 130,
-        },
-        data: {
-          label: ext.name,
-          type: ext.type,
-          color: NODE_COLORS.external,
-          raw: ext,
-        },
+        position: POSITIONS[ext.id] ?? { x: 1760, y: 600 },
+        data: { label: ext.name, type: ext.type, color: NODE_COLORS.external, raw: ext },
       });
     });
   }
@@ -184,58 +297,68 @@ function buildNodes(filter: string[], searchTerm: string): Node[] {
   return nodes;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// BUILD EDGES
+// ─────────────────────────────────────────────────────────────────────────────
 function buildEdges(filter: string[]): Edge[] {
   const edges: Edge[] = [];
-  const addedEdges = new Set<string>();
+  const seen = new Set<string>();
 
-  const addEdge = (source: string, target: string, label: string, animated: boolean, color: string) => {
-    const key = `${source}->${target}`;
-    if (addedEdges.has(key)) return;
-    addedEdges.add(key);
+  const addEdge = (
+    source: string, target: string,
+    color: string, animated: boolean,
+    label?: string, dashed?: boolean,
+  ) => {
+    const key = `${source}→${target}`;
+    if (seen.has(key)) return;
+    seen.add(key);
     edges.push({
-      id: key,
-      source,
-      target,
-      animated,
-      label,
-      style: { stroke: color, strokeWidth: 1.5 },
-      markerEnd: { type: MarkerType.ArrowClosed, color },
-      labelStyle: { fill: '#9ca3af', fontSize: 9 },
-      labelBgStyle: { fill: '#1f2937', fillOpacity: 0.8 },
+      id: key, source, target, animated,
+      type: 'smoothstep',
+      label: label ?? '',
+      style: { stroke: color, strokeWidth: dashed ? 1.5 : 2.5, strokeDasharray: dashed ? '5 4' : undefined },
+      markerEnd: { type: MarkerType.ArrowClosed, color, width: 14, height: 14 },
+      labelStyle: { fill: color, fontSize: 9, fontWeight: 700 },
+      labelBgStyle: { fill: '#060e1ccc', fillOpacity: 0.95 },
+      labelBgPadding: [4, 6] as [number, number],
     });
   };
 
-  // Kafka producer → topic → consumer edges
-  if (filter.length === 0 || filter.includes('kafka')) {
-    kafkaTopics.forEach(topic => {
-      topic.producers.forEach(producerId => {
-        const svcExists = services.find(s => s.id === producerId);
-        if (svcExists && (filter.length === 0 || filter.includes(svcExists.type))) {
-          addEdge(producerId, topic.id, 'produces', true, '#ED1C2E');
-        }
-      });
-      topic.consumers.forEach(consumerId => {
-        const svcExists = services.find(s => s.id === consumerId);
-        if (svcExists && (filter.length === 0 || filter.includes(svcExists.type))) {
-          addEdge(topic.id, consumerId, 'consumes', false, '#7C3AED');
-        }
-      });
-    });
-  }
+  const svcMap = new Map(services.map(s => [s.id, s]));
+  const extIds = new Set(externalSystems.map(e => e.id));
 
-  // External system edges
+  const svcVisible = (id: string) => {
+    const svc = svcMap.get(id);
+    return !!svc && (filter.length === 0 || filter.includes(svc.type));
+  };
+  const kafkaOk = filter.length === 0 || filter.includes('kafka');
+  const extOk   = filter.length === 0 || filter.includes('external');
+
+  kafkaTopics.forEach(topic => {
+    if (!kafkaOk) return;
+    topic.producers.forEach(prod => {
+      if (svcMap.has(prod) && svcVisible(prod))
+        addEdge(prod, topic.id, '#ED1C2E', true, 'publishes');
+      else if (extIds.has(prod) && extOk)
+        addEdge(prod, topic.id, '#F59E0B', true, 'publishes');
+    });
+    topic.consumers.forEach(cons => {
+      if (svcMap.has(cons) && svcVisible(cons))
+        addEdge(topic.id, cons, '#7C3AED', false, 'consumes');
+    });
+  });
+
   services.forEach(svc => {
-    if (filter.length > 0 && !filter.includes(svc.type)) return;
+    if (!svcVisible(svc.id)) return;
     svc.externalSystems.forEach(extId => {
-      if (filter.length === 0 || filter.includes('external')) {
-        addEdge(svc.id, extId, '', false, '#10B981');
-      }
+      if (extIds.has(extId) && extOk)
+        addEdge(svc.id, extId, '#10B981', false, undefined, true);
     });
     svc.calls.forEach(targetId => {
-      const targetSvc = services.find(s => s.id === targetId);
-      if (targetSvc && (filter.length === 0 || filter.includes(targetSvc.type))) {
-        addEdge(svc.id, targetId, 'calls', false, '#0078D2');
-      }
+      if (svcMap.has(targetId) && svcVisible(targetId))
+        addEdge(svc.id, targetId, '#009FDA', false, 'calls');
+      else if (extIds.has(targetId) && extOk)
+        addEdge(svc.id, targetId, '#10B981', false, undefined, true);
     });
   });
 
@@ -243,15 +366,26 @@ function buildEdges(filter: string[]): Edge[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GRAPH COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+interface GraphProps {
+  filter: string[];
+  searchTerm: string;
+  onNodeClick: (node: Node) => void;
+}
+
 const Graph: React.FC<GraphProps> = ({ filter, searchTerm, onNodeClick }) => {
-  const initialNodes = useMemo(() => buildNodes(filter, searchTerm), [filter, searchTerm]);
-  const initialEdges = useMemo(() => buildEdges(filter), [filter]);
+  const computedNodes = useMemo(() => buildNodes(filter, searchTerm), [filter, searchTerm]);
+  const computedEdges = useMemo(() => buildEdges(filter), [filter]);
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(computedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(computedEdges);
 
-  const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    onNodeClick(node);
+  useEffect(() => { setNodes(computedNodes); }, [computedNodes, setNodes]);
+  useEffect(() => { setEdges(computedEdges); }, [computedEdges, setEdges]);
+
+  const handleNodeClick = useCallback((_e: React.MouseEvent, node: Node) => {
+    if (node.type !== 'laneNode') onNodeClick(node);
   }, [onNodeClick]);
 
   return (
@@ -263,22 +397,56 @@ const Graph: React.FC<GraphProps> = ({ filter, searchTerm, onNodeClick }) => {
       onNodeClick={handleNodeClick}
       nodeTypes={nodeTypes}
       fitView
-      fitViewOptions={{ padding: 0.15 }}
-      minZoom={0.05}
+      fitViewOptions={{ padding: 0.07 }}
+      minZoom={0.03}
       maxZoom={2}
+      style={{ background: '#060e1c' }}
       defaultEdgeOptions={{ type: 'smoothstep' }}
-      style={{ background: '#071428' }}
+      proOptions={{ hideAttribution: true }}
     >
-      <Background color="#0d2a4a" gap={24} />
+      <Background color="#0d2540" gap={28} size={1} />
       <Controls style={{ background: '#071a33', border: '1px solid #0d2a4a', borderRadius: 8 }} />
+
+      {/* Legend overlay */}
+      <div style={{
+        position: 'absolute', bottom: 16, right: 16, zIndex: 5,
+        background: '#071a33ee', border: '1px solid #0d2a4a', borderRadius: 10,
+        padding: '12px 16px', fontSize: 11, color: '#94a3b8', backdropFilter: 'blur(4px)',
+      }}>
+        <div style={{ fontWeight: 800, color: '#e2e8f0', marginBottom: 9, fontSize: 12, letterSpacing: '0.5px' }}>
+          Data Flow Legend
+        </div>
+        {[
+          { color: '#ED1C2E', label: 'Kafka publish (animated)',  dashed: false, animated: true  },
+          { color: '#7C3AED', label: 'Kafka consume',             dashed: false, animated: false },
+          { color: '#009FDA', label: 'Service → Service (calls)', dashed: false, animated: false },
+          { color: '#10B981', label: 'External integration',      dashed: true,  animated: false },
+          { color: '#F59E0B', label: 'External → Kafka publish',  dashed: false, animated: true  },
+        ].map(({ color, label, dashed }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+            <svg width="30" height="10">
+              <line x1="0" y1="5" x2="24" y2="5"
+                stroke={color} strokeWidth="2.5"
+                strokeDasharray={dashed ? '5 3' : undefined} />
+              <polygon points="24,2 30,5 24,8" fill={color} />
+            </svg>
+            <span style={{ color, fontWeight: 600 }}>{label}</span>
+          </div>
+        ))}
+        <div style={{ borderTop: '1px solid #0d2a4a', marginTop: 9, paddingTop: 8, fontSize: 10, color: '#4B6E8B' }}>
+          Click any node to view full details →
+        </div>
+      </div>
+
       <MiniMap
         style={{ background: '#071a33', border: '1px solid #0d2a4a' }}
-        nodeColor={(n) => {
-          if (n.type === 'kafkaNode') return NODE_COLORS.kafka;
+        nodeColor={n => {
+          if (n.type === 'kafkaNode')    return NODE_COLORS.kafka;
           if (n.type === 'externalNode') return NODE_COLORS.external;
+          if (n.type === 'laneNode')     return 'transparent';
           return (n.data?.color as string) || '#64748b';
         }}
-        maskColor="rgba(7, 20, 40, 0.75)"
+        maskColor="rgba(6,14,28,0.75)"
       />
     </ReactFlow>
   );

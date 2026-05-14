@@ -9,4 +9,3 @@ coverage
 .vscode
 charts
 docker-compose*.yml
-nginx.conf
