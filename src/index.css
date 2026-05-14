@@ -1,8 +1,25 @@
 /* American Airlines brand theme */
-:root {
+:root, [data-theme="dark"] {
+  /* Brand (unchanged by theme) */
   --aa-navy:    #0C2340;
   --aa-red:     #ED1C2E;
   --aa-sky:     #009FDA;
+
+  /* Structural theme colors — dark mode */
+  --c-bg-app:      #060e1c;
+  --c-bg-sidebar:  #071a33;
+  --c-bg-panel:    #071428;
+  --c-bg-card:     #0a1628;
+  --c-bg-elevated: #0d1f3a;
+  --c-border:      #0d2a4a;
+  --c-text-1:      #f1f5f9;
+  --c-text-2:      #e2e8f0;
+  --c-text-3:      #cbd5e1;
+  --c-text-muted:  #4B6E8B;
+  --c-text-dim:    #2D5070;
+  --c-text-link:   #7BAFD4;
+
+  /* Legacy aliases (kept for backwards-compat) */
   --aa-bg:      #071428;
   --aa-surface: #071a33;
   --aa-border:  #0d2a4a;
@@ -10,28 +27,49 @@
   --aa-muted:   #4B6E8B;
 }
 
+[data-theme="light"] {
+  --c-bg-app:      #eef2f7;
+  --c-bg-sidebar:  #ffffff;
+  --c-bg-panel:    #f4f7fc;
+  --c-bg-card:     #ffffff;
+  --c-bg-elevated: #e4ecf5;
+  --c-border:      #c8d9ea;
+  --c-text-1:      #0f172a;
+  --c-text-2:      #1e293b;
+  --c-text-3:      #334155;
+  --c-text-muted:  #5a7a96;
+  --c-text-dim:    #8ba5be;
+  --c-text-link:   #1d6fa4;
+
+  --aa-bg:      #f4f7fc;
+  --aa-surface: #ffffff;
+  --aa-border:  #c8d9ea;
+  --aa-text:    #1e293b;
+  --aa-muted:   #5a7a96;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--aa-bg);
-  color: var(--aa-text);
+  background: var(--c-bg-app);
+  color: var(--c-text-2);
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 button { font-family: inherit; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--aa-surface); }
-::-webkit-scrollbar-thumb { background: #1a3a5c; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #2a5070; }
+::-webkit-scrollbar-track { background: var(--c-bg-sidebar); }
+::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-text-muted); }
 
 /* ReactFlow overrides */
 .react-flow__controls button {
-  background: #0d2a4a;
-  border-color: #1a3a5c;
-  color: #7BAFD4;
+  background: var(--c-bg-elevated);
+  border-color: var(--c-border);
+  color: var(--c-text-link);
 }
-.react-flow__controls button:hover { background: #1a3a5c; }
-.react-flow__controls-fitview::before { color: #7BAFD4; }
+.react-flow__controls button:hover { background: var(--c-border); }

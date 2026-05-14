@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useEffect } from 'react';
+﻿import { useCallback, useMemo, useEffect } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import ReactFlow, {
   Background,
   Controls,
@@ -211,7 +212,7 @@ const ExternalNode = ({ data }: { data: ExtData }) => (
     border: `2px dashed ${data.color}`,
     borderRadius: 8, padding: '8px 13px', minWidth: 145,
     boxShadow: `0 0 10px ${data.color}33`,
-    color: '#fff', cursor: 'pointer', textAlign: 'center',
+    color: 'var(--c-text-1)', cursor: 'pointer', textAlign: 'center',
   }}>
     <Handle type="target" position={Position.Left}   style={{ background: '#ffffff55', border: 'none' }} />
     <Handle type="target" position={Position.Top}    style={{ background: '#ffffff55', border: 'none' }} />
@@ -300,7 +301,7 @@ function buildNodes(filter: string[], searchTerm: string): Node[] {
 // ─────────────────────────────────────────────────────────────────────────────
 // BUILD EDGES
 // ─────────────────────────────────────────────────────────────────────────────
-function buildEdges(filter: string[]): Edge[] {
+function buildEdges(filter: string[], isDark: boolean): Edge[] {
   const edges: Edge[] = [];
   const seen = new Set<string>();
 
@@ -319,7 +320,7 @@ function buildEdges(filter: string[]): Edge[] {
       style: { stroke: color, strokeWidth: dashed ? 1.5 : 2.5, strokeDasharray: dashed ? '5 4' : undefined },
       markerEnd: { type: MarkerType.ArrowClosed, color, width: 14, height: 14 },
       labelStyle: { fill: color, fontSize: 9, fontWeight: 700 },
-      labelBgStyle: { fill: '#060e1ccc', fillOpacity: 0.95 },
+      labelBgStyle: { fill: isDark ? '#060e1ccc' : '#eef2f7dd', fillOpacity: 0.95 },
       labelBgPadding: [4, 6] as [number, number],
     });
   };
@@ -375,8 +376,9 @@ interface GraphProps {
 }
 
 const Graph: React.FC<GraphProps> = ({ filter, searchTerm, onNodeClick }) => {
+  const { isDark } = useTheme();
   const computedNodes = useMemo(() => buildNodes(filter, searchTerm), [filter, searchTerm]);
-  const computedEdges = useMemo(() => buildEdges(filter), [filter]);
+  const computedEdges = useMemo(() => buildEdges(filter, isDark), [filter, isDark]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(computedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(computedEdges);
@@ -400,20 +402,20 @@ const Graph: React.FC<GraphProps> = ({ filter, searchTerm, onNodeClick }) => {
       fitViewOptions={{ padding: 0.07 }}
       minZoom={0.03}
       maxZoom={2}
-      style={{ background: '#060e1c' }}
+      style={{ background: 'var(--c-bg-app)' }}
       defaultEdgeOptions={{ type: 'smoothstep' }}
       proOptions={{ hideAttribution: true }}
     >
-      <Background color="#0d2540" gap={28} size={1} />
-      <Controls style={{ background: '#071a33', border: '1px solid #0d2a4a', borderRadius: 8 }} />
+      <Background color={isDark ? '#0d2540' : '#c8d9ea'} gap={28} size={1} />
+      <Controls style={{ background: 'var(--c-bg-sidebar)', border: '1px solid var(--c-border)', borderRadius: 8 }} />
 
       {/* Legend overlay */}
       <div style={{
         position: 'absolute', bottom: 16, right: 16, zIndex: 5,
-        background: '#071a33ee', border: '1px solid #0d2a4a', borderRadius: 10,
-        padding: '12px 16px', fontSize: 11, color: '#94a3b8', backdropFilter: 'blur(4px)',
+        background: 'var(--c-bg-sidebar)', border: '1px solid var(--c-border)', borderRadius: 10,
+        padding: '12px 16px', fontSize: 11, color: 'var(--c-text-dim)', backdropFilter: 'blur(4px)',
       }}>
-        <div style={{ fontWeight: 800, color: '#e2e8f0', marginBottom: 9, fontSize: 12, letterSpacing: '0.5px' }}>
+        <div style={{ fontWeight: 800, color: 'var(--c-text-2)', marginBottom: 9, fontSize: 12, letterSpacing: '0.5px' }}>
           Data Flow Legend
         </div>
         {[
@@ -433,20 +435,20 @@ const Graph: React.FC<GraphProps> = ({ filter, searchTerm, onNodeClick }) => {
             <span style={{ color, fontWeight: 600 }}>{label}</span>
           </div>
         ))}
-        <div style={{ borderTop: '1px solid #0d2a4a', marginTop: 9, paddingTop: 8, fontSize: 10, color: '#4B6E8B' }}>
+        <div style={{ borderTop: '1px solid var(--c-border)', marginTop: 9, paddingTop: 8, fontSize: 10, color: 'var(--c-text-muted)' }}>
           Click any node to view full details →
         </div>
       </div>
 
       <MiniMap
-        style={{ background: '#071a33', border: '1px solid #0d2a4a' }}
+        style={{ background: 'var(--c-bg-sidebar)', border: '1px solid var(--c-border)' }}
         nodeColor={n => {
           if (n.type === 'kafkaNode')    return NODE_COLORS.kafka;
           if (n.type === 'externalNode') return NODE_COLORS.external;
           if (n.type === 'laneNode')     return 'transparent';
           return (n.data?.color as string) || '#64748b';
         }}
-        maskColor="rgba(6,14,28,0.75)"
+        maskColor={isDark ? 'rgba(6,14,28,0.75)' : 'rgba(238,242,247,0.75)'}
       />
     </ReactFlow>
   );

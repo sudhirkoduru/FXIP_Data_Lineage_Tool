@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+﻿import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Search, BookOpen, Globe, ChevronRight, Copy, Check, Star } from "lucide-react";
 import {
   glossaryTerms, aviationCodes,
@@ -63,8 +63,8 @@ const TermCard = ({
   return (
     <div
       style={{
-        background: isOpen ? '#0d1f3a' : '#0a1628',
-        border: `1px solid ${isOpen ? meta.color + '55' : '#0d2a4a'}`,
+        background: isOpen ? 'var(--c-bg-elevated)' : 'var(--c-bg-card)',
+        border: `1px solid ${isOpen ? meta.color + '55' : 'var(--c-border)'}`,
         borderLeft: `3px solid ${meta.color}`,
         borderRadius: 10,
         marginBottom: 8,
@@ -88,7 +88,7 @@ const TermCard = ({
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 15, fontWeight: 900, color: '#f1f5f9', letterSpacing: '0.3px' }}>
+            <span style={{ fontSize: 15, fontWeight: 900, color: 'var(--c-text-1)', letterSpacing: '0.3px' }}>
               {highlight(term.term)}
             </span>
             <span style={{
@@ -100,7 +100,7 @@ const TermCard = ({
             </span>
           </div>
           {term.expansion && (
-            <div style={{ fontSize: 11, color: '#4B6E8B', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'var(--c-text-muted)', marginTop: 2 }}>
               {highlight(term.expansion)}
             </div>
           )}
@@ -110,37 +110,37 @@ const TermCard = ({
       {/* Expanded body */}
       {isOpen && (
         <div style={{ padding: '0 16px 14px 42px', borderTop: `1px solid ${meta.color}22` }}>
-          <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.8, marginTop: 12 }}>
+          <div style={{ fontSize: 12, color: 'var(--c-text-3)', lineHeight: 1.8, marginTop: 12 }}>
             {term.definition}
           </div>
 
           {term.context && (
             <div style={{
-              marginTop: 12, padding: '10px 12px', background: '#060e1c',
+              marginTop: 12, padding: '10px 12px', background: 'var(--c-bg-app)',
               borderRadius: 8, borderLeft: `3px solid ${meta.color}`,
             }}>
               <div style={{ fontSize: 10, color: meta.color, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 5 }}>
                 FXIP Context
               </div>
-              <div style={{ fontSize: 11, color: '#7BAFD4', lineHeight: 1.7 }}>{term.context}</div>
+              <div style={{ fontSize: 11, color: 'var(--c-text-link)', lineHeight: 1.7 }}>{term.context}</div>
             </div>
           )}
 
           {term.source && (
-            <div style={{ marginTop: 10, fontSize: 10, color: '#4B6E8B', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-              <span style={{ color: '#4B6E8B', fontWeight: 700, flexShrink: 0 }}>Source:</span>
+            <div style={{ marginTop: 10, fontSize: 10, color: 'var(--c-text-muted)', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+              <span style={{ color: 'var(--c-text-muted)', fontWeight: 700, flexShrink: 0 }}>Source:</span>
               <span style={{ fontStyle: 'italic' }}>{term.source}</span>
             </div>
           )}
 
           {term.relatedTerms && term.relatedTerms.length > 0 && (
             <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
-              <span style={{ fontSize: 10, color: '#4B6E8B', fontWeight: 700 }}>See also:</span>
+              <span style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 700 }}>See also:</span>
               {term.relatedTerms.map(r => {
                 const rel = glossaryTerms.find(t => t.id === r);
                 return rel ? (
                   <span key={r} style={{
-                    fontSize: 10, background: '#0d1f3a', color: '#009FDA',
+                    fontSize: 10, background: 'var(--c-bg-elevated)', color: '#009FDA',
                     border: '1px solid #009FDA33', borderRadius: 20,
                     padding: '2px 8px', cursor: 'default',
                   }}>{rel.term}</span>
@@ -165,11 +165,11 @@ const CodeRow = ({ c, color, onCopy, copied }: {
     gridTemplateColumns: '90px 1fr auto',
     alignItems: 'start',
     padding: '10px 14px',
-    borderBottom: '1px solid #0a1525',
+    borderBottom: '1px solid var(--c-border)',
     gap: 12,
     transition: 'background 0.15s',
   }}
-    onMouseEnter={e => (e.currentTarget.style.background = '#0d1f3a')}
+    onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg-elevated)')}
     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
   >
     {/* Code + copy */}
@@ -183,7 +183,7 @@ const CodeRow = ({ c, color, onCopy, copied }: {
         title="Copy code"
         style={{
           background: 'none', border: 'none', cursor: 'pointer',
-          color: copied === c.code ? '#10B981' : '#2D5070',
+          color: copied === c.code ? '#10B981' : 'var(--c-text-dim)',
           padding: 2, display: 'flex', alignItems: 'center',
         }}
       >
@@ -193,15 +193,15 @@ const CodeRow = ({ c, color, onCopy, copied }: {
 
     {/* Name + metadata */}
     <div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>{c.name}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)' }}>{c.name}</div>
       {c.city && (
-        <div style={{ fontSize: 11, color: '#4B6E8B', marginTop: 1 }}>{c.city} · {c.country}</div>
+        <div style={{ fontSize: 11, color: 'var(--c-text-muted)', marginTop: 1 }}>{c.city} · {c.country}</div>
       )}
       {!c.city && c.country && (
-        <div style={{ fontSize: 11, color: '#4B6E8B', marginTop: 1 }}>{c.country}</div>
+        <div style={{ fontSize: 11, color: 'var(--c-text-muted)', marginTop: 1 }}>{c.country}</div>
       )}
       {c.notes && (
-        <div style={{ fontSize: 10, color: '#2D5070', marginTop: 3, fontStyle: 'italic' }}>{c.notes}</div>
+        <div style={{ fontSize: 10, color: 'var(--c-text-dim)', marginTop: 3, fontStyle: 'italic' }}>{c.notes}</div>
       )}
     </div>
 
@@ -286,12 +286,12 @@ const Glossary: React.FC = () => {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', height: '100%',
-      background: '#060e1c', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif',
+      background: 'var(--c-bg-app)', color: 'var(--c-text-2)', fontFamily: 'system-ui, sans-serif',
     }}>
       {/* ── Hero header ──────────────────────────────────────────────────── */}
       <div style={{
-        background: 'linear-gradient(135deg, #071a33 0%, #0a1628 60%, #060e1c 100%)',
-        borderBottom: '1px solid #0d2a4a',
+        background: 'linear-gradient(135deg, var(--c-bg-sidebar) 0%, var(--c-bg-card) 60%, var(--c-bg-app) 100%)',
+        borderBottom: '1px solid var(--c-border)',
         padding: '20px 28px 16px',
         flexShrink: 0,
       }}>
@@ -303,10 +303,10 @@ const Glossary: React.FC = () => {
             fontSize: 20, flexShrink: 0,
           }}>📖</div>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#f1f5f9', lineHeight: 1.2 }}>
+            <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--c-text-1)', lineHeight: 1.2 }}>
               Glossary & Aviation Codes
             </div>
-            <div style={{ fontSize: 11, color: '#4B6E8B', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'var(--c-text-muted)', marginTop: 2 }}>
               {glossaryTerms.length} terms · {aviationCodes.filter(c => c.type.includes('airline')).length} airline codes · {aviationCodes.filter(c => c.type.includes('airport')).length} airport codes
             </div>
           </div>
@@ -314,26 +314,26 @@ const Glossary: React.FC = () => {
 
         {/* Search */}
         <div style={{ position: 'relative' }}>
-          <Search size={14} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#4B6E8B', pointerEvents: 'none' }} />
+          <Search size={14} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--c-text-muted)', pointerEvents: 'none' }} />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={mainTab === 'glossary' ? 'Search terms, acronyms, definitions…' : 'Search code, airport name, city…'}
             style={{
               width: '100%', padding: '10px 14px 10px 36px', fontSize: 13,
-              background: '#0d1f3a', border: '1.5px solid #0d2a4a', borderRadius: 10,
-              color: '#e2e8f0', outline: 'none', boxSizing: 'border-box',
+              background: 'var(--c-bg-elevated)', border: '1.5px solid var(--c-border)', borderRadius: 10,
+              color: 'var(--c-text-2)', outline: 'none', boxSizing: 'border-box',
               transition: 'border-color 0.2s',
             }}
             onFocus={e => (e.target.style.borderColor = '#0078D2')}
-            onBlur={e => (e.target.style.borderColor = '#0d2a4a')}
+            onBlur={e => (e.target.style.borderColor = 'var(--c-border)')}
           />
           {search && (
             <button
               onClick={() => setSearch('')}
               style={{
                 position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', color: '#4B6E8B', cursor: 'pointer', fontSize: 16, lineHeight: 1,
+                background: 'none', border: 'none', color: 'var(--c-text-muted)', cursor: 'pointer', fontSize: 16, lineHeight: 1,
               }}
             >×</button>
           )}
@@ -344,9 +344,9 @@ const Glossary: React.FC = () => {
           {TABS.map(t => (
             <button key={t.id} onClick={() => setMainTab(t.id)} style={{
               flex: 1, padding: '8px 0', fontSize: 12, fontWeight: mainTab === t.id ? 800 : 500,
-              color: mainTab === t.id ? '#f1f5f9' : '#4B6E8B',
+              color: mainTab === t.id ? 'var(--c-text-1)' : 'var(--c-text-muted)',
               background: mainTab === t.id ? '#0078D222' : 'transparent',
-              border: `1px solid ${mainTab === t.id ? '#0078D266' : '#0d2a4a'}`,
+              border: `1px solid ${mainTab === t.id ? '#0078D266' : 'var(--c-border)'}`,
               borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s',
             }}>{t.label}</button>
           ))}
@@ -359,11 +359,11 @@ const Glossary: React.FC = () => {
 
           {/* Left: category filters + A-Z jump */}
           <div style={{
-            width: 170, flexShrink: 0, borderRight: '1px solid #0d2a4a',
-            background: '#071428', display: 'flex', flexDirection: 'column',
+            width: 170, flexShrink: 0, borderRight: '1px solid var(--c-border)',
+            background: 'var(--c-bg-panel)', display: 'flex', flexDirection: 'column',
             padding: '12px 10px', overflowY: 'auto',
           }}>
-            <div style={{ fontSize: 9, color: '#4B6E8B', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 800, marginBottom: 8, paddingLeft: 2 }}>
+            <div style={{ fontSize: 9, color: 'var(--c-text-muted)', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 800, marginBottom: 8, paddingLeft: 2 }}>
               Category
             </div>
             {/* All button */}
@@ -372,7 +372,7 @@ const Glossary: React.FC = () => {
               background: catFilter === 'all' ? '#0078D222' : 'none',
               border: `1px solid ${catFilter === 'all' ? '#0078D266' : 'transparent'}`,
               borderRadius: 7, padding: '6px 8px', cursor: 'pointer',
-              color: catFilter === 'all' ? '#e2e8f0' : '#4B6E8B',
+              color: catFilter === 'all' ? 'var(--c-text-2)' : 'var(--c-text-muted)',
               fontSize: 11, fontWeight: catFilter === 'all' ? 700 : 400,
               marginBottom: 3, textAlign: 'left',
             }}>
@@ -387,7 +387,7 @@ const Glossary: React.FC = () => {
                   background: active ? meta.color + '22' : 'none',
                   border: `1px solid ${active ? meta.color + '55' : 'transparent'}`,
                   borderRadius: 7, padding: '6px 8px', cursor: 'pointer',
-                  color: active ? meta.color : '#4B6E8B',
+                  color: active ? meta.color : 'var(--c-text-muted)',
                   fontSize: 11, fontWeight: active ? 700 : 400,
                   marginBottom: 3, textAlign: 'left', transition: 'all 0.15s',
                 }}>
@@ -401,17 +401,17 @@ const Glossary: React.FC = () => {
             {/* A-Z jump */}
             {letters.length > 2 && (
               <>
-                <div style={{ margin: '14px 0 8px', borderTop: '1px solid #0d2a4a' }} />
-                <div style={{ fontSize: 9, color: '#4B6E8B', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 800, marginBottom: 8, paddingLeft: 2 }}>
+                <div style={{ margin: '14px 0 8px', borderTop: '1px solid var(--c-border)' }} />
+                <div style={{ fontSize: 9, color: 'var(--c-text-muted)', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 800, marginBottom: 8, paddingLeft: 2 }}>
                   Jump to
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                   {letters.map(l => (
                     <button key={l} onClick={() => scrollToLetter(l)} style={{
                       width: 26, height: 26, borderRadius: 5,
-                      background: activeLetter === l ? '#0078D2' : '#0d1f3a',
-                      border: `1px solid ${activeLetter === l ? '#0078D2' : '#0d2a4a'}`,
-                      color: activeLetter === l ? '#fff' : '#4B6E8B',
+                      background: activeLetter === l ? '#0078D2' : 'var(--c-bg-elevated)',
+                      border: `1px solid ${activeLetter === l ? '#0078D2' : 'var(--c-border)'}`,
+                      color: activeLetter === l ? '#fff' : 'var(--c-text-muted)',
                       fontSize: 11, fontWeight: 700, cursor: 'pointer',
                     }}>{l}</button>
                   ))}
@@ -420,7 +420,7 @@ const Glossary: React.FC = () => {
             )}
 
             {/* Stats */}
-            <div style={{ marginTop: 'auto', paddingTop: 14, fontSize: 10, color: '#2D5070', textAlign: 'center', lineHeight: 1.7 }}>
+            <div style={{ marginTop: 'auto', paddingTop: 14, fontSize: 10, color: 'var(--c-text-dim)', textAlign: 'center', lineHeight: 1.7 }}>
               {filteredTerms.length} term{filteredTerms.length !== 1 ? 's' : ''} shown
             </div>
           </div>
@@ -428,12 +428,12 @@ const Glossary: React.FC = () => {
           {/* Right: term list */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
             {filteredTerms.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#4B6E8B', paddingTop: 60 }}>
+              <div style={{ textAlign: 'center', color: 'var(--c-text-muted)', paddingTop: 60 }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
                 <div style={{ fontSize: 14, fontWeight: 700 }}>No terms match "{search}"</div>
                 <button onClick={() => { setSearch(''); setCatFilter('all'); }} style={{
-                  marginTop: 12, background: 'none', border: '1px solid #0d2a4a',
-                  borderRadius: 8, color: '#4B6E8B', fontSize: 12, padding: '6px 16px', cursor: 'pointer',
+                  marginTop: 12, background: 'none', border: '1px solid var(--c-border)',
+                  borderRadius: 8, color: 'var(--c-text-muted)', fontSize: 12, padding: '6px 16px', cursor: 'pointer',
                 }}>Clear filters</button>
               </div>
             ) : (
@@ -442,15 +442,15 @@ const Glossary: React.FC = () => {
                   {/* Letter divider */}
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8,
-                    position: 'sticky', top: 0, background: '#060e1c', zIndex: 1, paddingTop: 4, paddingBottom: 4,
+                    position: 'sticky', top: 0, background: 'var(--c-bg-app)', zIndex: 1, paddingTop: 4, paddingBottom: 4,
                   }}>
                     <div style={{
-                      width: 32, height: 32, borderRadius: 8, background: '#0d1f3a',
-                      border: '1px solid #0d2a4a', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#4B6E8B', flexShrink: 0,
+                      width: 32, height: 32, borderRadius: 8, background: 'var(--c-bg-elevated)',
+                      border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: 16, fontWeight: 900, color: 'var(--c-text-muted)', flexShrink: 0,
                     }}>{letter}</div>
-                    <div style={{ flex: 1, height: 1, background: '#0d2a4a' }} />
-                    <span style={{ fontSize: 10, color: '#2D5070' }}>
+                    <div style={{ flex: 1, height: 1, background: 'var(--c-border)' }} />
+                    <span style={{ fontSize: 10, color: 'var(--c-text-dim)' }}>
                       {grouped.get(letter)?.length} term{grouped.get(letter)!.length !== 1 ? 's' : ''}
                     </span>
                   </div>
@@ -478,20 +478,20 @@ const Glossary: React.FC = () => {
           {/* Code type selector */}
           <div style={{
             display: 'flex', gap: 8, padding: '12px 20px',
-            background: '#071428', borderBottom: '1px solid #0d2a4a', flexShrink: 0, flexWrap: 'wrap',
+            background: 'var(--c-bg-panel)', borderBottom: '1px solid var(--c-border)', flexShrink: 0, flexWrap: 'wrap',
           }}>
             {CODE_SUB.map(cs => (
               <button key={cs.id} onClick={() => setCodeType(cs.id)} style={{
                 padding: '7px 16px', fontSize: 12, fontWeight: codeType === cs.id ? 800 : 500,
                 background: codeType === cs.id ? cs.color + '22' : 'transparent',
-                border: `1.5px solid ${codeType === cs.id ? cs.color : '#0d2a4a'}`,
-                borderRadius: 20, cursor: 'pointer', color: codeType === cs.id ? cs.color : '#4B6E8B',
+                border: `1.5px solid ${codeType === cs.id ? cs.color : 'var(--c-border)'}`,
+                borderRadius: 20, cursor: 'pointer', color: codeType === cs.id ? cs.color : 'var(--c-text-muted)',
                 transition: 'all 0.15s',
               }}>
                 {cs.label}
                 <span style={{
                   marginLeft: 6, fontSize: 10,
-                  background: codeType === cs.id ? cs.color + '33' : '#0d1f3a',
+                  background: codeType === cs.id ? cs.color + '33' : 'var(--c-bg-elevated)',
                   borderRadius: 10, padding: '1px 6px',
                 }}>
                   {aviationCodes.filter(c => c.type === cs.id).length}
@@ -502,10 +502,10 @@ const Glossary: React.FC = () => {
 
           {/* Stats + hub legend */}
           <div style={{
-            padding: '8px 20px', background: '#071428', borderBottom: '1px solid #0d2a4a',
+            padding: '8px 20px', background: 'var(--c-bg-panel)', borderBottom: '1px solid var(--c-border)',
             display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0, flexWrap: 'wrap',
           }}>
-            <span style={{ fontSize: 11, color: '#4B6E8B' }}>
+            <span style={{ fontSize: 11, color: 'var(--c-text-muted)' }}>
               {filteredCodes.length} of {aviationCodes.filter(c => c.type === codeType).length} codes
               {term && ` matching "${search}"`}
             </span>
@@ -515,7 +515,7 @@ const Glossary: React.FC = () => {
                 {hubCount} AA hub{hubCount !== 1 ? 's' : ''}
               </span>
             )}
-            <span style={{ fontSize: 10, color: '#2D5070', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 10, color: 'var(--c-text-dim)', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5 }}>
               <Copy size={10} /> Click code to copy
             </span>
           </div>
@@ -524,22 +524,22 @@ const Glossary: React.FC = () => {
           <div style={{
             display: 'grid', gridTemplateColumns: '90px 1fr auto',
             padding: '8px 14px', gap: 12,
-            background: '#0d1f3a', borderBottom: '1px solid #0d2a4a', flexShrink: 0,
+            background: 'var(--c-bg-elevated)', borderBottom: '1px solid var(--c-border)', flexShrink: 0,
           }}>
             {['CODE', 'NAME / DETAILS', ''].map(h => (
-              <div key={h} style={{ fontSize: 10, color: '#4B6E8B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</div>
+              <div key={h} style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</div>
             ))}
           </div>
 
           {/* Code rows */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {filteredCodes.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#4B6E8B', paddingTop: 60 }}>
+              <div style={{ textAlign: 'center', color: 'var(--c-text-muted)', paddingTop: 60 }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
                 <div style={{ fontSize: 14, fontWeight: 700 }}>No codes match "{search}"</div>
                 <button onClick={() => setSearch('')} style={{
-                  marginTop: 12, background: 'none', border: '1px solid #0d2a4a',
-                  borderRadius: 8, color: '#4B6E8B', fontSize: 12, padding: '6px 16px', cursor: 'pointer',
+                  marginTop: 12, background: 'none', border: '1px solid var(--c-border)',
+                  borderRadius: 8, color: 'var(--c-text-muted)', fontSize: 12, padding: '6px 16px', cursor: 'pointer',
                 }}>Clear search</button>
               </div>
             ) : (
@@ -551,25 +551,25 @@ const Glossary: React.FC = () => {
 
           {/* Code type explainer */}
           <div style={{
-            padding: '10px 20px', background: '#071428', borderTop: '1px solid #0d2a4a', flexShrink: 0,
+            padding: '10px 20px', background: 'var(--c-bg-panel)', borderTop: '1px solid var(--c-border)', flexShrink: 0,
           }}>
             {codeType === 'icao-airline' && (
-              <div style={{ fontSize: 11, color: '#4B6E8B', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11, color: 'var(--c-text-muted)', lineHeight: 1.6 }}>
                 <span style={{ color: '#0078D2', fontWeight: 700 }}>ICAO 3-letter airline designators</span> — used in ATC flight plans (ICAO FPLN Item 7), ACARS AirlineCode.ICAO field, and OpsHub flight event topics. Defined in ICAO Doc 8585.
               </div>
             )}
             {codeType === 'iata-airline' && (
-              <div style={{ fontSize: 11, color: '#4B6E8B', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11, color: 'var(--c-text-muted)', lineHeight: 1.6 }}>
                 <span style={{ color: '#10B981', fontWeight: 700 }}>IATA 2-letter airline codes</span> — used in reservations, ticketing, DCS, OFP XML (AirlineCode.IATA), FOS entries, and FXIP topic suffixes (soar-aa-*, soar-mq-*). Defined in IATA Resolution 762.
               </div>
             )}
             {codeType === 'icao-airport' && (
-              <div style={{ fontSize: 11, color: '#4B6E8B', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11, color: 'var(--c-text-muted)', lineHeight: 1.6 }}>
                 <span style={{ color: '#7C3AED', fontWeight: 700 }}>ICAO 4-letter airport location indicators</span> — used in ATC flight plans, ACARS FlightKey (SchedDepICAO, OriginalArrivalICAO), and DPRParams (AlternateStation, OrigArrStation). US airports prefixed with K. Defined in ICAO Doc 7910.
               </div>
             )}
             {codeType === 'iata-airport' && (
-              <div style={{ fontSize: 11, color: '#4B6E8B', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11, color: 'var(--c-text-muted)', lineHeight: 1.6 }}>
                 <span style={{ color: '#F59E0B', fontWeight: 700 }}>IATA 3-letter airport codes</span> — used in OpsHub FlightEvent (departureAirport, arrivalAirport), FOS, reservations, and baggage systems. Defined in IATA Standard Schedules Information Manual (SSIM). <Star size={10} fill="#F59E0B" color="#F59E0B" style={{ display: 'inline', verticalAlign: 'middle' }} /> marks AA hubs.
               </div>
             )}

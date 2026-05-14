@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import type { Node } from "reactflow";
 import {
   X, ExternalLink, Server, Database, ArrowUpRight, ArrowDownLeft,
@@ -28,7 +28,7 @@ const Section = ({ icon, title, children }: {
     <div style={{
       display: "flex", alignItems: "center", gap: 7,
       fontSize: 10, fontWeight: 800, letterSpacing: "1.2px",
-      textTransform: "uppercase", color: "#4B6E8B", marginBottom: 10,
+      textTransform: "uppercase", color: "var(--c-text-muted)", marginBottom: 10,
     }}>
       {icon} {title}
     </div>
@@ -40,8 +40,8 @@ const Section = ({ icon, title, children }: {
 const InfoRow = ({ label, value, mono }: { label: string; value?: string; mono?: boolean }) =>
   value ? (
     <div style={{ marginBottom: 7 }}>
-      <div style={{ fontSize: 10, color: "#4B6E8B", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
-      <div style={{ fontSize: 11, color: "#7BAFD4", marginTop: 2, fontFamily: mono ? "monospace" : "inherit", wordBreak: "break-all" }}>{value}</div>
+      <div style={{ fontSize: 10, color: "var(--c-text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+      <div style={{ fontSize: 11, color: "var(--c-text-link)", marginTop: 2, fontFamily: mono ? "monospace" : "inherit", wordBreak: "break-all" }}>{value}</div>
     </div>
   ) : null;
 
@@ -107,14 +107,14 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
     <div style={{
       position: "absolute", top: 0, right: 0,
       width: 390, height: "100%",
-      background: "#071428",
-      borderLeft: "1px solid #0d2a4a",
+      background: "var(--c-bg-panel)",
+      borderLeft: "1px solid var(--c-border)",
       overflowY: "auto", zIndex: 10,
       display: "flex", flexDirection: "column",
     }}>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{
-        background: "#071a33",
+        background: "var(--c-bg-sidebar)",
         borderBottom: `3px solid ${headerColor}`,
         padding: "16px 20px",
         position: "sticky", top: 0, zIndex: 1,
@@ -124,11 +124,11 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
             <div style={{ fontSize: 10, color: headerColor, fontWeight: 800, textTransform: "uppercase", letterSpacing: "1.2px" }}>
               {svc?.type ?? (isTopic ? "Kafka Topic" : "External System")}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: "#f1f5f9", marginTop: 4, lineHeight: 1.2 }}>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "var(--c-text-1)", marginTop: 4, lineHeight: 1.2 }}>
               {svc?.acronym ?? (topic ? topic.name.split("-").slice(-2).join("-") : ext?.name)}
             </div>
             {svc && (
-              <div style={{ fontSize: 12, color: "#7BAFD4", marginTop: 3 }}>{svc.name}</div>
+              <div style={{ fontSize: 12, color: "var(--c-text-link)", marginTop: 3 }}>{svc.name}</div>
             )}
             {topic && (
               <div style={{ fontSize: 10, fontFamily: "monospace", color: "#fca5a5", marginTop: 3, wordBreak: "break-all" }}>
@@ -138,7 +138,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
           </div>
           <button
             onClick={onClose}
-            style={{ background: "none", border: "none", color: "#4B6E8B", cursor: "pointer", padding: 4, marginLeft: 8, flexShrink: 0 }}
+            style={{ background: "none", border: "none", color: "var(--c-text-muted)", cursor: "pointer", padding: 4, marginLeft: 8, flexShrink: 0 }}
           >
             <X size={18} />
           </button>
@@ -147,7 +147,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
 
       {/* ── Tab bar (services only get Events + Schema tabs) ────────────────── */}
       {svc && (
-        <div style={{ display: "flex", borderBottom: "1px solid #0d2a4a", background: "#071428", flexShrink: 0 }}>
+        <div style={{ display: "flex", borderBottom: "1px solid var(--c-border)", background: "var(--c-bg-panel)", flexShrink: 0 }}>
           {([ ['overview','Overview'], ['events','Events'], ['schema','Data Objects'] ] as const).map(([t, label]) => {
             const evCount = domainEvents.filter(e => e.serviceId === svc.id).length;
             const schCount = dataObjects.filter(o => o.usedBy.includes(svc.id)).length;
@@ -155,7 +155,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
             return (
               <button key={t} onClick={() => setTab(t)} style={{
                 flex: 1, padding: "9px 4px", fontSize: 11, fontWeight: tab === t ? 800 : 500,
-                color: tab === t ? "#f1f5f9" : "#4B6E8B",
+                color: tab === t ? "var(--c-text-1)" : "var(--c-text-muted)",
                 background: "none", border: "none", cursor: "pointer",
                 borderBottom: tab === t ? `2px solid ${headerColor}` : "2px solid transparent",
                 transition: "all 0.15s", position: "relative",
@@ -178,7 +178,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
         {/* ══ SERVICE — Overview tab ════════════════════════════════════════════ */}
         {svc && tab === 'overview' && (
           <>
-            <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7 }}>{svc.description}</div>
+            <div style={{ fontSize: 13, color: "var(--c-text-3)", lineHeight: 1.7 }}>{svc.description}</div>
 
             {/* Deployment info */}
             <Section icon={<Server size={12} />} title="Deployment">
@@ -199,14 +199,14 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
               <Section icon={<Globe size={12} />} title={"REST Endpoints  (" + svc.restEndpoints.length + ")"}>
                 {svc.restEndpoints.map((ep, i) => (
                   <div key={i} style={{
-                    background: "#0d1f3a", borderRadius: 7, padding: "8px 10px",
+                    background: "var(--c-bg-elevated)", borderRadius: 7, padding: "8px 10px",
                     marginBottom: 7, borderLeft: `3px solid #0078D2`,
                   }}>
                     <div style={{ display: "flex", alignItems: "center", marginBottom: 3 }}>
                       <MethodBadge m={ep.method} />
                       <code style={{ fontSize: 12, color: "#7dd3fc" }}>{ep.path}</code>
                     </div>
-                    <div style={{ fontSize: 11, color: "#4B6E8B" }}>{ep.description}</div>
+                    <div style={{ fontSize: 11, color: "var(--c-text-muted)" }}>{ep.description}</div>
                   </div>
                 ))}
               </Section>
@@ -227,7 +227,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                       <Tag text={t.partitions + " parts"} color="#64748b" />
                     </div>
                     {t.consumers.length > 0 && (
-                      <div style={{ fontSize: 10, color: "#4B6E8B", marginTop: 4 }}>
+                      <div style={{ fontSize: 10, color: "var(--c-text-muted)", marginTop: 4 }}>
                         Consumed by: {t.consumers.join(", ")}
                       </div>
                     )}
@@ -251,7 +251,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                       <Tag text={t.retention}  color="#64748b" />
                     </div>
                     {t.notes && (
-                      <div style={{ fontSize: 10, color: "#4B6E8B", marginTop: 4 }}>{t.notes}</div>
+                      <div style={{ fontSize: 10, color: "var(--c-text-muted)", marginTop: 4 }}>{t.notes}</div>
                     )}
                   </div>
                 ))}
@@ -316,23 +316,23 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
             const relObj = dataObjects.find(o => o.id === ev.dataObjectId);
             return (
               <div style={{
-                background: "#0d1f3a", borderRadius: 8, marginBottom: 10,
+                background: "var(--c-bg-elevated)", borderRadius: 8, marginBottom: 10,
                 borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#ED1C2E'}`,
                 overflow: "hidden",
               }}>
                 <div style={{ padding: "10px 12px" }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#f1f5f9", marginBottom: 4 }}>{ev.name}</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "var(--c-text-1)", marginBottom: 4 }}>{ev.name}</div>
                   {ev.topic && (
                     <div style={{ fontFamily: "monospace", fontSize: 10, color: "#fca5a5", background: "#1a0a0a", borderRadius: 4, padding: "2px 7px", display: "inline-block", marginBottom: 6 }}>
                       {ev.topic}
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: "#7BAFD4", marginBottom: 4 }}>{ev.description}</div>
-                  <div style={{ fontSize: 10, color: "#4B6E8B", marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, color: "var(--c-text-link)", marginBottom: 4 }}>{ev.description}</div>
+                  <div style={{ fontSize: 10, color: "var(--c-text-muted)", marginBottom: 6 }}>
                     <span style={{ color: "#F59E0B", fontWeight: 700 }}>Trigger: </span>{ev.trigger}
                   </div>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                    <span style={{ fontSize: 10, background: "#0a1525", color: "#7dd3fc", border: "1px solid #0d2a4a", borderRadius: 5, padding: "2px 7px" }}>
+                    <span style={{ fontSize: 10, background: "var(--c-border)", color: "#7dd3fc", border: "1px solid var(--c-border)", borderRadius: 5, padding: "2px 7px" }}>
                       {ev.format}
                     </span>
                     {relObj && (
@@ -344,7 +344,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                   {ev.samplePayload && (
                     <button
                       onClick={() => setOpen(o => !o)}
-                      style={{ marginTop: 8, background: "none", border: "1px solid #0d2a4a", borderRadius: 5, color: "#4B6E8B", fontSize: 10, padding: "3px 8px", cursor: "pointer" }}
+                      style={{ marginTop: 8, background: "none", border: "1px solid var(--c-border)", borderRadius: 5, color: "var(--c-text-muted)", fontSize: 10, padding: "3px 8px", cursor: "pointer" }}
                     >
                       {open ? "▲ Hide" : "▼ Sample Payload"}
                     </button>
@@ -353,7 +353,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                 {open && ev.samplePayload && (
                   <pre style={{
                     margin: 0, padding: "10px 12px", fontSize: 10, color: "#7dd3fc",
-                    background: "#060e1c", borderTop: "1px solid #0d2a4a",
+                    background: "var(--c-bg-app)", borderTop: "1px solid var(--c-border)",
                     fontFamily: "monospace", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-word",
                   }}>
                     {ev.samplePayload}
@@ -364,7 +364,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
           };
 
           return svcEvents.length === 0 ? (
-            <div style={{ textAlign: "center", color: "#4B6E8B", paddingTop: 40, fontSize: 13 }}>
+            <div style={{ textAlign: "center", color: "var(--c-text-muted)", paddingTop: 40, fontSize: 13 }}>
               No domain events catalogued for this service yet.
             </div>
           ) : (
@@ -387,28 +387,28 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
         {svc && tab === 'schema' && (() => {
           const svcObjects = dataObjects.filter(o => o.usedBy.includes(svc.id));
           return svcObjects.length === 0 ? (
-            <div style={{ textAlign: "center", color: "#4B6E8B", paddingTop: 40, fontSize: 13 }}>
+            <div style={{ textAlign: "center", color: "var(--c-text-muted)", paddingTop: 40, fontSize: 13 }}>
               No data objects catalogued for this service yet.
             </div>
           ) : svcObjects.map(obj => (
-            <div key={obj.id} style={{ background: "#0d1f3a", borderRadius: 8, marginBottom: 14, overflow: "hidden" }}>
-              <div style={{ padding: "10px 12px", borderBottom: "1px solid #0d2a4a" }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: "#f1f5f9" }}>{obj.name}</div>
-                <div style={{ fontSize: 10, color: "#4B6E8B", marginTop: 2 }}>{obj.source}</div>
-                <div style={{ fontSize: 11, color: "#7BAFD4", marginTop: 5, lineHeight: 1.5 }}>{obj.description}</div>
+            <div key={obj.id} style={{ background: "var(--c-bg-elevated)", borderRadius: 8, marginBottom: 14, overflow: "hidden" }}>
+              <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--c-border)" }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "var(--c-text-1)" }}>{obj.name}</div>
+                <div style={{ fontSize: 10, color: "var(--c-text-muted)", marginTop: 2 }}>{obj.source}</div>
+                <div style={{ fontSize: 11, color: "var(--c-text-link)", marginTop: 5, lineHeight: 1.5 }}>{obj.description}</div>
                 <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                   <Tag text={obj.format.split(' ')[0]} color="#7C3AED" />
                   <Tag text={obj.fields.length + " fields"} color="#0078D2" />
                 </div>
               </div>
               {obj.fields.map(f => (
-                <div key={f.name} style={{ padding: "6px 12px", borderBottom: "1px solid #0a1525", background: f.required ? "transparent" : "#0a1525" }}>
+                <div key={f.name} style={{ padding: "6px 12px", borderBottom: "1px solid var(--c-border)", background: f.required ? "transparent" : "var(--c-border)" }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <code style={{ fontSize: 11, color: "#7dd3fc", fontWeight: 700, minWidth: 130 }}>{f.name}</code>
                     <code style={{ fontSize: 10, color: "#c4b5fd" }}>{f.type}</code>
                     {f.required && <span style={{ fontSize: 9, color: "#34d399", background: "#064e3b", borderRadius: 4, padding: "1px 4px", fontWeight: 700 }}>req</span>}
                   </div>
-                  <div style={{ fontSize: 10, color: "#4B6E8B", marginTop: 2 }}>{f.description}</div>
+                  <div style={{ fontSize: 10, color: "var(--c-text-muted)", marginTop: 2 }}>{f.description}</div>
                   {f.enum && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 3 }}>
                       {f.enum.map(v => <span key={v} style={{ fontSize: 9, color: "#c4b5fd", background: "#7C3AED22", borderRadius: 3, padding: "1px 5px" }}>{v}</span>)}
@@ -436,15 +436,15 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                 { label: "Retention",  value: topic.retention  },
                 { label: "Broker",     value: topic.brokerType },
               ].map(({ label, value }) => (
-                <div key={label} style={{ background: "#0d1f3a", borderRadius: 7, padding: "8px 11px" }}>
-                  <div style={{ fontSize: 10, color: "#4B6E8B", textTransform: "uppercase" }}>{label}</div>
-                  <div style={{ fontSize: 12, color: "#e2e8f0", marginTop: 3, fontWeight: 600 }}>{value}</div>
+                <div key={label} style={{ background: "var(--c-bg-elevated)", borderRadius: 7, padding: "8px 11px" }}>
+                  <div style={{ fontSize: 10, color: "var(--c-text-muted)", textTransform: "uppercase" }}>{label}</div>
+                  <div style={{ fontSize: 12, color: "var(--c-text-2)", marginTop: 3, fontWeight: 600 }}>{value}</div>
                 </div>
               ))}
             </div>
 
             {topic.notes && (
-              <div style={{ marginTop: 12, background: "#0d1f3a", borderRadius: 7, padding: "9px 11px", fontSize: 12, color: "#7BAFD4", borderLeft: "3px solid #F59E0B" }}>
+              <div style={{ marginTop: 12, background: "var(--c-bg-elevated)", borderRadius: 7, padding: "9px 11px", fontSize: 12, color: "var(--c-text-link)", borderLeft: "3px solid #F59E0B" }}>
                 {topic.notes}
               </div>
             )}
@@ -470,10 +470,10 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                             border: `1px solid ${ev.direction === 'incoming' ? '#7C3AED44' : '#ED1C2E44'}`,
                             borderRadius: 5, padding: "1px 5px", fontWeight: 700,
                           }}>{ev.direction}</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "#f1f5f9" }}>{svcName}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--c-text-1)" }}>{svcName}</span>
                         </div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "#e2e8f0", marginBottom: 3 }}>{ev.name}</div>
-                        <div style={{ fontSize: 10, color: "#4B6E8B" }}>{ev.trigger}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--c-text-2)", marginBottom: 3 }}>{ev.name}</div>
+                        <div style={{ fontSize: 10, color: "var(--c-text-muted)" }}>{ev.trigger}</div>
                       </div>
                     );
                   })}
@@ -487,7 +487,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                 {topicProducers.map(s => (
                   <div key={s.id} style={{ background: "#1a0a0a", borderRadius: 7, padding: "7px 10px", marginBottom: 6, borderLeft: "3px solid #ED1C2E" }}>
                     <div style={{ fontWeight: 700, color: "#fca5a5", fontSize: 12 }}>{s.acronym}</div>
-                    <div style={{ fontSize: 11, color: "#4B6E8B" }}>{s.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--c-text-muted)" }}>{s.name}</div>
                   </div>
                 ))}
               </Section>
@@ -499,7 +499,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                 {topicConsumers.map(s => (
                   <div key={s.id} style={{ background: "#0d0a1a", borderRadius: 7, padding: "7px 10px", marginBottom: 6, borderLeft: "3px solid #7C3AED" }}>
                     <div style={{ fontWeight: 700, color: "#c4b5fd", fontSize: 12 }}>{s.acronym}</div>
-                    <div style={{ fontSize: 11, color: "#4B6E8B" }}>{s.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--c-text-muted)" }}>{s.name}</div>
                   </div>
                 ))}
               </Section>
@@ -521,7 +521,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
         {/* ══ EXTERNAL SYSTEM ══════════════════════════════════════════════════ */}
         {ext && (
           <>
-            <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7 }}>{ext.description}</div>
+            <div style={{ fontSize: 13, color: "var(--c-text-3)", lineHeight: 1.7 }}>{ext.description}</div>
             <div style={{ marginTop: 14 }}>
               <Tag text={ext.type} color={NODE_COLORS.external} />
             </div>
@@ -535,14 +535,14 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                 <Section icon={<GitBranch size={12} />} title={"Connected Services  (" + connected.length + ")"}>
                   {connected.map(s => (
                     <div key={s.id} style={{
-                      background: "#0d1f3a", borderRadius: 7, padding: "7px 10px",
+                      background: "var(--c-bg-elevated)", borderRadius: 7, padding: "7px 10px",
                       marginBottom: 6, borderLeft: `3px solid ${NODE_COLORS[s.type as keyof typeof NODE_COLORS]}`,
                     }}>
                       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                         <Tag text={s.type.toUpperCase()} color={NODE_COLORS[s.type as keyof typeof NODE_COLORS]} />
-                        <span style={{ fontWeight: 700, color: "#e2e8f0", fontSize: 12 }}>{s.acronym}</span>
+                        <span style={{ fontWeight: 700, color: "var(--c-text-2)", fontSize: 12 }}>{s.acronym}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: "#4B6E8B", marginTop: 3 }}>{s.name}</div>
+                      <div style={{ fontSize: 11, color: "var(--c-text-muted)", marginTop: 3 }}>{s.name}</div>
                     </div>
                   ))}
                 </Section>

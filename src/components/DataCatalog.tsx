@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+﻿import React, { useState, useMemo } from "react";
 import { Search, Database, Layers, Zap, ChevronDown, ChevronRight, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { dataObjects, domainEvents, services } from "../data/lineage";
 import type { DataObject, DataDomain } from "../data/lineage";
@@ -22,8 +22,8 @@ const ObjectCard = ({ obj, selected, onClick }: { obj: DataObject; selected: boo
     <div
       onClick={onClick}
       style={{
-        background: selected ? `${meta.color}22` : '#0d1f3a',
-        border: `1.5px solid ${selected ? meta.color : '#0d2a4a'}`,
+        background: selected ? `${meta.color}22` : 'var(--c-bg-elevated)',
+        border: `1.5px solid ${selected ? meta.color : 'var(--c-border)'}`,
         borderRadius: 10, padding: '12px 14px', cursor: 'pointer',
         transition: 'all 0.15s',
         boxShadow: selected ? `0 0 12px ${meta.color}44` : 'none',
@@ -34,16 +34,16 @@ const ObjectCard = ({ obj, selected, onClick }: { obj: DataObject; selected: boo
         <span style={{ background: meta.color + '25', color: meta.color, border: `1px solid ${meta.color}44`, borderRadius: 5, padding: '1px 7px', fontSize: 10, fontWeight: 700 }}>
           {meta.label}
         </span>
-        <span style={{ background: '#1a2a4a', color: '#4B6E8B', borderRadius: 5, padding: '1px 7px', fontSize: 10 }}>
+        <span style={{ background: '#1a2a4a', color: 'var(--c-text-muted)', borderRadius: 5, padding: '1px 7px', fontSize: 10 }}>
           {obj.format.split(' ')[0]}
         </span>
       </div>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#f1f5f9', marginBottom: 4 }}>{obj.name}</div>
-      <div style={{ fontSize: 11, color: '#4B6E8B', lineHeight: 1.5 }}>{obj.description.slice(0, 100)}{obj.description.length > 100 ? '…' : ''}</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text-1)', marginBottom: 4 }}>{obj.name}</div>
+      <div style={{ fontSize: 11, color: 'var(--c-text-muted)', lineHeight: 1.5 }}>{obj.description.slice(0, 100)}{obj.description.length > 100 ? '…' : ''}</div>
       <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 10, color: '#4B6E8B' }}>{obj.fields.length} fields</span>
-        <span style={{ color: '#0d2a4a' }}>·</span>
-        <span style={{ fontSize: 10, color: '#4B6E8B' }}>{obj.usedBy.length} service{obj.usedBy.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 10, color: 'var(--c-text-muted)' }}>{obj.fields.length} fields</span>
+        <span style={{ color: 'var(--c-border)' }}>·</span>
+        <span style={{ fontSize: 10, color: 'var(--c-text-muted)' }}>{obj.usedBy.length} service{obj.usedBy.length !== 1 ? 's' : ''}</span>
       </div>
     </div>
   );
@@ -54,8 +54,8 @@ const FieldRow = ({ name, type, required, description, example, enums }: {
   name: string; type: string; required: boolean; description: string; example?: string; enums?: string[];
 }) => (
   <div style={{
-    borderBottom: '1px solid #0d2a4a', padding: '8px 12px',
-    background: required ? 'transparent' : '#0a1525',
+    borderBottom: '1px solid var(--c-border)', padding: '8px 12px',
+    background: required ? 'transparent' : 'var(--c-border)',
   }}>
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
       <code style={{ fontSize: 12, color: '#7dd3fc', fontWeight: 700, minWidth: 160, flexShrink: 0 }}>{name}</code>
@@ -63,7 +63,7 @@ const FieldRow = ({ name, type, required, description, example, enums }: {
       <span style={{
         fontSize: 9, padding: '2px 5px', borderRadius: 4, flexShrink: 0, marginTop: 1,
         background: required ? '#064e3b' : '#1e293b',
-        color: required ? '#34d399' : '#4B6E8B', fontWeight: 700,
+        color: required ? '#34d399' : 'var(--c-text-muted)', fontWeight: 700,
       }}>{required ? 'required' : 'optional'}</span>
     </div>
     <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, paddingLeft: 2 }}>{description}</div>
@@ -87,14 +87,14 @@ const EventRow = ({ ev }: { ev: typeof domainEvents[0] }) => {
   const svc = services.find(s => s.id === ev.serviceId);
   return (
     <div style={{
-      background: '#0d1f3a', borderRadius: 8, padding: '10px 12px', marginBottom: 8,
+      background: 'var(--c-bg-elevated)', borderRadius: 8, padding: '10px 12px', marginBottom: 8,
       borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#ED1C2E'}`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
         {ev.direction === 'incoming'
           ? <ArrowDownLeft size={13} color="#7C3AED" />
           : <ArrowUpRight size={13} color="#ED1C2E" />}
-        <span style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>{ev.name}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-1)' }}>{ev.name}</span>
         <span style={{
           fontSize: 10, background: ev.direction === 'incoming' ? '#7C3AED22' : '#ED1C2E22',
           color: ev.direction === 'incoming' ? '#c4b5fd' : '#fca5a5',
@@ -112,7 +112,7 @@ const EventRow = ({ ev }: { ev: typeof domainEvents[0] }) => {
           {ev.topic}
         </div>
       )}
-      <div style={{ fontSize: 11, color: '#4B6E8B', marginBottom: 4 }}>{ev.description}</div>
+      <div style={{ fontSize: 11, color: 'var(--c-text-muted)', marginBottom: 4 }}>{ev.description}</div>
       <div style={{ fontSize: 10, color: '#64748b' }}>
         <span style={{ color: '#F59E0B', fontWeight: 600 }}>Trigger: </span>{ev.trigger}
       </div>
@@ -133,14 +133,14 @@ const SamplePayload = ({ payload }: { payload: string }) => {
     <div style={{ marginBottom: 10 }}>
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ background: 'none', border: '1px solid #0d2a4a', borderRadius: 6, color: '#4B6E8B', fontSize: 11, padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+        style={{ background: 'none', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text-muted)', fontSize: 11, padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
       >
         {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
         Sample Payload
       </button>
       {open && (
         <pre style={{
-          marginTop: 6, background: '#060e1c', border: '1px solid #0d2a4a', borderRadius: 8,
+          marginTop: 6, background: 'var(--c-bg-app)', border: '1px solid var(--c-border)', borderRadius: 8,
           padding: '10px 12px', fontSize: 11, color: '#7dd3fc', overflowX: 'auto',
           fontFamily: 'monospace', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
         }}>
@@ -160,17 +160,17 @@ const DetailPanel = ({ obj }: { obj: DataObject }) => {
   return (
     <div style={{ height: '100%', overflowY: 'auto' }}>
       {/* header */}
-      <div style={{ background: '#071a33', borderBottom: `3px solid ${meta.color}`, padding: '18px 22px', position: 'sticky', top: 0, zIndex: 1 }}>
+      <div style={{ background: 'var(--c-bg-sidebar)', borderBottom: `3px solid ${meta.color}`, padding: '18px 22px', position: 'sticky', top: 0, zIndex: 1 }}>
         <div style={{ fontSize: 10, color: meta.color, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px' }}>
           {meta.icon} {meta.label} Domain
         </div>
-        <div style={{ fontSize: 22, fontWeight: 900, color: '#f1f5f9', marginTop: 5 }}>{obj.name}</div>
-        <div style={{ fontSize: 12, color: '#7BAFD4', marginTop: 4 }}>{obj.description}</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--c-text-1)', marginTop: 5 }}>{obj.name}</div>
+        <div style={{ fontSize: 12, color: 'var(--c-text-link)', marginTop: 4 }}>{obj.description}</div>
         <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-          <span style={{ background: '#0d1f3a', border: '1px solid #0d2a4a', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: '#7BAFD4' }}>
+          <span style={{ background: 'var(--c-bg-elevated)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: 'var(--c-text-link)' }}>
             📄 {obj.source}
           </span>
-          <span style={{ background: '#0d1f3a', border: '1px solid #0d2a4a', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: '#7BAFD4' }}>
+          <span style={{ background: 'var(--c-bg-elevated)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: 'var(--c-text-link)' }}>
             ⚙ {obj.format}
           </span>
         </div>
@@ -179,15 +179,15 @@ const DetailPanel = ({ obj }: { obj: DataObject }) => {
       <div style={{ padding: '16px 22px' }}>
         {/* field table */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 10, color: '#4B6E8B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>
             <Layers size={11} style={{ display: 'inline', marginRight: 5 }} />
             Schema Fields ({obj.fields.length})
           </div>
-          <div style={{ background: '#060e1c', border: '1px solid #0d2a4a', borderRadius: 10, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', gap: 10, padding: '6px 12px', background: '#0d1f3a', borderBottom: '1px solid #0d2a4a' }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#4B6E8B', minWidth: 160 }}>FIELD</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#4B6E8B', minWidth: 130 }}>TYPE</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#4B6E8B' }}>REQ</span>
+          <div style={{ background: 'var(--c-bg-app)', border: '1px solid var(--c-border)', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', gap: 10, padding: '6px 12px', background: 'var(--c-bg-elevated)', borderBottom: '1px solid var(--c-border)' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-text-muted)', minWidth: 160 }}>FIELD</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-text-muted)', minWidth: 130 }}>TYPE</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-text-muted)' }}>REQ</span>
             </div>
             {obj.fields.map(f => (
               <FieldRow key={f.name} name={f.name} type={f.type} required={f.required} description={f.description} example={f.example} enums={f.enum} />
@@ -198,7 +198,7 @@ const DetailPanel = ({ obj }: { obj: DataObject }) => {
         {/* used by services */}
         {relatedServices.length > 0 && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 10, color: '#4B6E8B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>
+            <div style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>
               <Database size={11} style={{ display: 'inline', marginRight: 5 }} />
               Used By ({relatedServices.length} service{relatedServices.length !== 1 ? 's' : ''})
             </div>
@@ -206,7 +206,7 @@ const DetailPanel = ({ obj }: { obj: DataObject }) => {
               {relatedServices.map(s => (
                 <span key={s.id} style={{ background: '#0078D222', color: '#7dd3fc', border: '1px solid #0078D244', borderRadius: 7, padding: '4px 10px', fontSize: 11, fontWeight: 700 }}>
                   {s.acronym}
-                  <span style={{ fontWeight: 400, color: '#4B6E8B', fontSize: 10 }}> {s.name}</span>
+                  <span style={{ fontWeight: 400, color: 'var(--c-text-muted)', fontSize: 10 }}> {s.name}</span>
                 </span>
               ))}
             </div>
@@ -216,7 +216,7 @@ const DetailPanel = ({ obj }: { obj: DataObject }) => {
         {/* related events */}
         {relatedEvents.length > 0 && (
           <div>
-            <div style={{ fontSize: 10, color: '#4B6E8B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>
+            <div style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>
               <Zap size={11} style={{ display: 'inline', marginRight: 5 }} />
               Events Using This Object ({relatedEvents.length})
             </div>
@@ -264,16 +264,16 @@ const DataCatalog: React.FC = () => {
   const domains = Array.from(new Set(dataObjects.map(o => o.domain))) as DataDomain[];
 
   return (
-    <div style={{ display: 'flex', height: '100%', background: '#060e1c', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ display: 'flex', height: '100%', background: 'var(--c-bg-app)', color: 'var(--c-text-2)', fontFamily: 'system-ui, sans-serif' }}>
       {/* ── Left panel: search + list ──────────────────────────────────────── */}
-      <div style={{ width: 420, flexShrink: 0, borderRight: '1px solid #0d2a4a', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: 420, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column' }}>
 
         {/* tab bar */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #0d2a4a', background: '#071a33' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)', background: 'var(--c-bg-sidebar)' }}>
           {([['objects', '📦 Data Objects'], ['events', '⚡ Domain Events']] as const).map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)} style={{
               flex: 1, padding: '12px 0', fontSize: 12, fontWeight: tab === t ? 800 : 500,
-              color: tab === t ? '#f1f5f9' : '#4B6E8B',
+              color: tab === t ? 'var(--c-text-1)' : 'var(--c-text-muted)',
               background: 'none', border: 'none', cursor: 'pointer',
               borderBottom: tab === t ? '2px solid #009FDA' : '2px solid transparent',
               transition: 'all 0.15s',
@@ -282,16 +282,16 @@ const DataCatalog: React.FC = () => {
         </div>
 
         {/* search */}
-        <div style={{ padding: '12px 14px', borderBottom: '1px solid #0d2a4a', background: '#071428' }}>
+        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)', background: 'var(--c-bg-panel)' }}>
           <div style={{ position: 'relative' }}>
-            <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#4B6E8B', pointerEvents: 'none' }} />
+            <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--c-text-muted)', pointerEvents: 'none' }} />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={tab === 'objects' ? 'Search fields, types, descriptions…' : 'Search events, topics, triggers…'}
               style={{
                 width: '100%', padding: '7px 10px 7px 30px', fontSize: 12,
-                background: '#0d1f3a', border: '1px solid #0d2a4a', borderRadius: 8, color: '#e2e8f0',
+                background: 'var(--c-bg-elevated)', border: '1px solid var(--c-border)', borderRadius: 8, color: 'var(--c-text-2)',
                 outline: 'none', boxSizing: 'border-box',
               }}
             />
@@ -301,16 +301,16 @@ const DataCatalog: React.FC = () => {
           {tab === 'objects' && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
               <button onClick={() => setDomainFilter('all')} style={{
-                background: domainFilter === 'all' ? '#0078D2' : '#0d1f3a',
-                border: `1px solid ${domainFilter === 'all' ? '#0078D2' : '#0d2a4a'}`,
-                borderRadius: 20, padding: '3px 10px', fontSize: 10, color: '#e2e8f0', cursor: 'pointer', fontWeight: domainFilter === 'all' ? 700 : 400,
+                background: domainFilter === 'all' ? '#0078D2' : 'var(--c-bg-elevated)',
+                border: `1px solid ${domainFilter === 'all' ? '#0078D2' : 'var(--c-border)'}`,
+                borderRadius: 20, padding: '3px 10px', fontSize: 10, color: 'var(--c-text-2)', cursor: 'pointer', fontWeight: domainFilter === 'all' ? 700 : 400,
               }}>All</button>
               {domains.map(d => {
                 const m = DOMAIN_META[d];
                 return (
                   <button key={d} onClick={() => setDomainFilter(domainFilter === d ? 'all' : d)} style={{
-                    background: domainFilter === d ? m.color + '33' : '#0d1f3a',
-                    border: `1px solid ${domainFilter === d ? m.color : '#0d2a4a'}`,
+                    background: domainFilter === d ? m.color + '33' : 'var(--c-bg-elevated)',
+                    border: `1px solid ${domainFilter === d ? m.color : 'var(--c-border)'}`,
                     borderRadius: 20, padding: '3px 10px', fontSize: 10,
                     color: domainFilter === d ? m.color : '#64748b', cursor: 'pointer', fontWeight: domainFilter === d ? 700 : 400,
                   }}>{m.icon} {m.label}</button>
@@ -321,7 +321,7 @@ const DataCatalog: React.FC = () => {
         </div>
 
         {/* stats bar */}
-        <div style={{ padding: '6px 14px', background: '#071428', borderBottom: '1px solid #0d2a4a', fontSize: 10, color: '#4B6E8B' }}>
+        <div style={{ padding: '6px 14px', background: 'var(--c-bg-panel)', borderBottom: '1px solid var(--c-border)', fontSize: 10, color: 'var(--c-text-muted)' }}>
           {tab === 'objects'
             ? `${filteredObjects.length} of ${dataObjects.length} objects · ${filteredObjects.reduce((s, o) => s + o.fields.length, 0)} fields`
             : `${filteredEvents.length} of ${domainEvents.length} events`
@@ -332,7 +332,7 @@ const DataCatalog: React.FC = () => {
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
           {tab === 'objects' ? (
             filteredObjects.length === 0
-              ? <div style={{ textAlign: 'center', color: '#4B6E8B', padding: '40px 0', fontSize: 13 }}>No objects match search</div>
+              ? <div style={{ textAlign: 'center', color: 'var(--c-text-muted)', padding: '40px 0', fontSize: 13 }}>No objects match search</div>
               : filteredObjects.map(o => (
                 <div key={o.id} style={{ marginBottom: 8 }}>
                   <ObjectCard obj={o} selected={selected?.id === o.id} onClick={() => setSelected(selected?.id === o.id ? null : o)} />
@@ -340,7 +340,7 @@ const DataCatalog: React.FC = () => {
               ))
           ) : (
             filteredEvents.length === 0
-              ? <div style={{ textAlign: 'center', color: '#4B6E8B', padding: '40px 0', fontSize: 13 }}>No events match search</div>
+              ? <div style={{ textAlign: 'center', color: 'var(--c-text-muted)', padding: '40px 0', fontSize: 13 }}>No events match search</div>
               : filteredEvents.map(ev => (
                 <div key={ev.id} style={{ marginBottom: 10 }}>
                   <EventRow ev={ev} />
@@ -356,10 +356,10 @@ const DataCatalog: React.FC = () => {
         {selected ? (
           <DetailPanel obj={selected} />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#4B6E8B', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--c-text-muted)', gap: 16 }}>
             <div style={{ fontSize: 48 }}>📦</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: '#64748b' }}>Select a Data Object</div>
-            <div style={{ fontSize: 12, color: '#4B6E8B', textAlign: 'center', maxWidth: 300 }}>
+            <div style={{ fontSize: 12, color: 'var(--c-text-muted)', textAlign: 'center', maxWidth: 300 }}>
               Click any card on the left to view schema fields, related events, and service usage.
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 20 }}>
@@ -369,10 +369,10 @@ const DataCatalog: React.FC = () => {
                 { label: 'Schema Fields', count: dataObjects.reduce((s, o) => s + o.fields.length, 0), color: '#0EA5E9', icon: '🔤' },
                 { label: 'Services Covered', count: new Set(dataObjects.flatMap(o => o.usedBy)).size, color: '#10B981', icon: '⚙' },
               ].map(({ label, count, color, icon }) => (
-                <div key={label} style={{ background: '#0d1f3a', border: `1px solid ${color}33`, borderRadius: 10, padding: '14px 18px', textAlign: 'center' }}>
+                <div key={label} style={{ background: 'var(--c-bg-elevated)', border: `1px solid ${color}33`, borderRadius: 10, padding: '14px 18px', textAlign: 'center' }}>
                   <div style={{ fontSize: 22 }}>{icon}</div>
                   <div style={{ fontSize: 28, fontWeight: 900, color, marginTop: 4 }}>{count}</div>
-                  <div style={{ fontSize: 11, color: '#4B6E8B', marginTop: 2 }}>{label}</div>
+                  <div style={{ fontSize: 11, color: 'var(--c-text-muted)', marginTop: 2 }}>{label}</div>
                 </div>
               ))}
             </div>
