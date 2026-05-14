@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Node } from "reactflow";
 import {
   X, ExternalLink, Server, Database, ArrowUpRight, ArrowDownLeft,
   Globe, GitBranch, Layers, Zap, Package, AlertCircle,
 } from "lucide-react";
 import type { Service, KafkaTopic, ExternalSystem } from "../data/lineage";
-import { NODE_COLORS, services, kafkaTopics } from "../data/lineage";
+import { NODE_COLORS, services, kafkaTopics, dataObjects, domainEvents } from "../data/lineage";
+
+type SidebarTab = 'overview' | 'events' | 'schema';
 
 interface Props { node: Node | null; onClose: () => void }
 
@@ -63,6 +65,8 @@ const MethodBadge = ({ m }: { m: string }) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 const Sidebar: React.FC<Props> = ({ node, onClose }) => {
+  const [tab, setTab] = useState<SidebarTab>('overview');
+
   if (!node) return null;
 
   const raw = node.data?.raw as Service | KafkaTopic | ExternalSystem | undefined;
@@ -141,11 +145,38 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
         </div>
       </div>
 
-      {/* ── Body ───────────────────────────────────────────────────────────── */}
-      <div style={{ padding: "16px 20px", flex: 1 }}>
+      {/* ── Tab bar (services only get Events + Schema tabs) ────────────────── */}
+      {svc && (
+        <div style={{ display: "flex", borderBottom: "1px solid #0d2a4a", background: "#071428", flexShrink: 0 }}>
+          {([ ['overview','Overview'], ['events','Events'], ['schema','Data Objects'] ] as const).map(([t, label]) => {
+            const evCount = domainEvents.filter(e => e.serviceId === svc.id).length;
+            const schCount = dataObjects.filter(o => o.usedBy.includes(svc.id)).length;
+            const badge = t === 'events' ? evCount : t === 'schema' ? schCount : 0;
+            return (
+              <button key={t} onClick={() => setTab(t)} style={{
+                flex: 1, padding: "9px 4px", fontSize: 11, fontWeight: tab === t ? 800 : 500,
+                color: tab === t ? "#f1f5f9" : "#4B6E8B",
+                background: "none", border: "none", cursor: "pointer",
+                borderBottom: tab === t ? `2px solid ${headerColor}` : "2px solid transparent",
+                transition: "all 0.15s", position: "relative",
+              }}>
+                {label}
+                {badge > 0 && (
+                  <span style={{ marginLeft: 4, background: headerColor + "33", color: headerColor, borderRadius: 10, padding: "1px 5px", fontSize: 9, fontWeight: 800 }}>
+                    {badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-        {/* ══ SERVICE ══════════════════════════════════════════════════════════ */}
-        {svc && (
+      {/* ── Body ───────────────────────────────────────────────────────────── */}
+      <div style={{ padding: "16px 20px", flex: 1, overflowY: "auto" }}>
+
+        {/* ══ SERVICE — Overview tab ════════════════════════════════════════════ */}
+        {svc && tab === 'overview' && (
           <>
             <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7 }}>{svc.description}</div>
 
@@ -274,6 +305,121 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
           </>
         )}
 
+        {/* ══ SERVICE — Events tab ══════════════════════════════════════════════ */}
+        {svc && tab === 'events' && (() => {
+          const svcEvents = domainEvents.filter(e => e.serviceId === svc.id);
+          const incoming = svcEvents.filter(e => e.direction === 'incoming');
+          const outgoing = svcEvents.filter(e => e.direction === 'outgoing');
+
+          const EventCard = ({ ev }: { ev: typeof domainEvents[0] }) => {
+            const [open, setOpen] = React.useState(false);
+            const relObj = dataObjects.find(o => o.id === ev.dataObjectId);
+            return (
+              <div style={{
+                background: "#0d1f3a", borderRadius: 8, marginBottom: 10,
+                borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#ED1C2E'}`,
+                overflow: "hidden",
+              }}>
+                <div style={{ padding: "10px 12px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#f1f5f9", marginBottom: 4 }}>{ev.name}</div>
+                  {ev.topic && (
+                    <div style={{ fontFamily: "monospace", fontSize: 10, color: "#fca5a5", background: "#1a0a0a", borderRadius: 4, padding: "2px 7px", display: "inline-block", marginBottom: 6 }}>
+                      {ev.topic}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: "#7BAFD4", marginBottom: 4 }}>{ev.description}</div>
+                  <div style={{ fontSize: 10, color: "#4B6E8B", marginBottom: 6 }}>
+                    <span style={{ color: "#F59E0B", fontWeight: 700 }}>Trigger: </span>{ev.trigger}
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                    <span style={{ fontSize: 10, background: "#0a1525", color: "#7dd3fc", border: "1px solid #0d2a4a", borderRadius: 5, padding: "2px 7px" }}>
+                      {ev.format}
+                    </span>
+                    {relObj && (
+                      <span style={{ fontSize: 10, background: "#1a0a30", color: "#c4b5fd", border: "1px solid #7C3AED33", borderRadius: 5, padding: "2px 7px" }}>
+                        📦 {relObj.name}
+                      </span>
+                    )}
+                  </div>
+                  {ev.samplePayload && (
+                    <button
+                      onClick={() => setOpen(o => !o)}
+                      style={{ marginTop: 8, background: "none", border: "1px solid #0d2a4a", borderRadius: 5, color: "#4B6E8B", fontSize: 10, padding: "3px 8px", cursor: "pointer" }}
+                    >
+                      {open ? "▲ Hide" : "▼ Sample Payload"}
+                    </button>
+                  )}
+                </div>
+                {open && ev.samplePayload && (
+                  <pre style={{
+                    margin: 0, padding: "10px 12px", fontSize: 10, color: "#7dd3fc",
+                    background: "#060e1c", borderTop: "1px solid #0d2a4a",
+                    fontFamily: "monospace", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-word",
+                  }}>
+                    {ev.samplePayload}
+                  </pre>
+                )}
+              </div>
+            );
+          };
+
+          return svcEvents.length === 0 ? (
+            <div style={{ textAlign: "center", color: "#4B6E8B", paddingTop: 40, fontSize: 13 }}>
+              No domain events catalogued for this service yet.
+            </div>
+          ) : (
+            <>
+              {incoming.length > 0 && (
+                <Section icon={<ArrowDownLeft size={12} />} title={`Incoming Events  (${incoming.length})`}>
+                  {incoming.map(ev => <EventCard key={ev.id} ev={ev} />)}
+                </Section>
+              )}
+              {outgoing.length > 0 && (
+                <Section icon={<ArrowUpRight size={12} />} title={`Outgoing Events  (${outgoing.length})`}>
+                  {outgoing.map(ev => <EventCard key={ev.id} ev={ev} />)}
+                </Section>
+              )}
+            </>
+          );
+        })()}
+
+        {/* ══ SERVICE — Schema/Data Objects tab ════════════════════════════════ */}
+        {svc && tab === 'schema' && (() => {
+          const svcObjects = dataObjects.filter(o => o.usedBy.includes(svc.id));
+          return svcObjects.length === 0 ? (
+            <div style={{ textAlign: "center", color: "#4B6E8B", paddingTop: 40, fontSize: 13 }}>
+              No data objects catalogued for this service yet.
+            </div>
+          ) : svcObjects.map(obj => (
+            <div key={obj.id} style={{ background: "#0d1f3a", borderRadius: 8, marginBottom: 14, overflow: "hidden" }}>
+              <div style={{ padding: "10px 12px", borderBottom: "1px solid #0d2a4a" }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#f1f5f9" }}>{obj.name}</div>
+                <div style={{ fontSize: 10, color: "#4B6E8B", marginTop: 2 }}>{obj.source}</div>
+                <div style={{ fontSize: 11, color: "#7BAFD4", marginTop: 5, lineHeight: 1.5 }}>{obj.description}</div>
+                <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                  <Tag text={obj.format.split(' ')[0]} color="#7C3AED" />
+                  <Tag text={obj.fields.length + " fields"} color="#0078D2" />
+                </div>
+              </div>
+              {obj.fields.map(f => (
+                <div key={f.name} style={{ padding: "6px 12px", borderBottom: "1px solid #0a1525", background: f.required ? "transparent" : "#0a1525" }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <code style={{ fontSize: 11, color: "#7dd3fc", fontWeight: 700, minWidth: 130 }}>{f.name}</code>
+                    <code style={{ fontSize: 10, color: "#c4b5fd" }}>{f.type}</code>
+                    {f.required && <span style={{ fontSize: 9, color: "#34d399", background: "#064e3b", borderRadius: 4, padding: "1px 4px", fontWeight: 700 }}>req</span>}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#4B6E8B", marginTop: 2 }}>{f.description}</div>
+                  {f.enum && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 3 }}>
+                      {f.enum.map(v => <span key={v} style={{ fontSize: 9, color: "#c4b5fd", background: "#7C3AED22", borderRadius: 3, padding: "1px 5px" }}>{v}</span>)}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ));
+        })()}
+
         {/* ══ KAFKA TOPIC ══════════════════════════════════════════════════════ */}
         {topic && (
           <>
@@ -302,6 +448,38 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                 {topic.notes}
               </div>
             )}
+
+            {/* Events through this topic */}
+            {(() => {
+              const topicEvents = domainEvents.filter(e => e.topic === topic.id || e.topic === topic.name);
+              if (topicEvents.length === 0) return null;
+              return (
+                <Section icon={<Zap size={12} />} title={`Events on This Topic  (${topicEvents.length})`}>
+                  {topicEvents.map(ev => {
+                    const svcName = services.find(s => s.id === ev.serviceId)?.acronym ?? ev.serviceId;
+                    return (
+                      <div key={ev.id} style={{
+                        background: ev.direction === 'incoming' ? "#0d0a1a" : "#1a0a0a",
+                        borderRadius: 7, padding: "8px 10px", marginBottom: 7,
+                        borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#ED1C2E'}`,
+                      }}>
+                        <div style={{ display: "flex", gap: 7, alignItems: "center", marginBottom: 4 }}>
+                          <span style={{
+                            fontSize: 9, background: ev.direction === 'incoming' ? '#7C3AED22' : '#ED1C2E22',
+                            color: ev.direction === 'incoming' ? '#c4b5fd' : '#fca5a5',
+                            border: `1px solid ${ev.direction === 'incoming' ? '#7C3AED44' : '#ED1C2E44'}`,
+                            borderRadius: 5, padding: "1px 5px", fontWeight: 700,
+                          }}>{ev.direction}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#f1f5f9" }}>{svcName}</span>
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#e2e8f0", marginBottom: 3 }}>{ev.name}</div>
+                        <div style={{ fontSize: 10, color: "#4B6E8B" }}>{ev.trigger}</div>
+                      </div>
+                    );
+                  })}
+                </Section>
+              );
+            })()}
 
             {/* Producers */}
             {topicProducers.length > 0 && (

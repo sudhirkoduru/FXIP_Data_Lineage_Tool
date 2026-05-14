@@ -14,9 +14,11 @@ const TYPES = [
 interface FilterPanelProps {
   active: string[];
   onChange: (filters: string[]) => void;
+  currentView: 'graph' | 'catalog';
+  onViewChange: (v: 'graph' | 'catalog') => void;
 }
 
-const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange }) => {
+const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange, currentView, onViewChange }) => {
   const toggle = (key: string) => {
     if (active.includes(key)) {
       onChange(active.filter(k => k !== key));
@@ -38,6 +40,30 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange }) => {
         overflowY: "auto",
       }}
     >
+      {/* ── View switcher ───────────────────────────────────────────────── */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 10, color: "#4B6E8B", textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: 700, marginBottom: 8, paddingLeft: 4 }}>View</div>
+        {([
+          { id: 'graph',   icon: '⬡', label: 'Graph View'    },
+          { id: 'catalog', icon: '📦', label: 'Data Catalog'  },
+        ] as const).map(({ id, icon, label }) => (
+          <button key={id} onClick={() => onViewChange(id)} style={{
+            display: "flex", alignItems: "center", gap: 9, width: "100%",
+            background: currentView === id ? "#009FDA22" : "transparent",
+            border: `1px solid ${currentView === id ? "#009FDA66" : "#0d2a4a"}`,
+            borderRadius: 7, padding: "8px 10px", cursor: "pointer",
+            color: currentView === id ? "#009FDA" : "#2D5070",
+            fontSize: 12, fontWeight: currentView === id ? 800 : 400,
+            marginBottom: 5, textAlign: "left", transition: "all 0.15s",
+          }}>
+            <span style={{ fontSize: 14 }}>{icon}</span>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ borderTop: "1px solid #0d2a4a", marginBottom: 14 }} />
+
       <div
         style={{
           fontSize: 10,
@@ -47,6 +73,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange }) => {
           fontWeight: 700,
           marginBottom: 10,
           paddingLeft: 4,
+          opacity: currentView === 'catalog' ? 0.4 : 1,
         }}
       >
         Filter by Type
