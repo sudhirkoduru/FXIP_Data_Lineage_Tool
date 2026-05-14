@@ -14,8 +14,8 @@ const TYPES = [
 interface FilterPanelProps {
   active: string[];
   onChange: (filters: string[]) => void;
-  currentView: 'graph' | 'catalog';
-  onViewChange: (v: 'graph' | 'catalog') => void;
+  currentView: 'graph' | 'catalog' | 'glossary';
+  onViewChange: (v: 'graph' | 'catalog' | 'glossary') => void;
 }
 
 const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange, currentView, onViewChange }) => {
@@ -44,8 +44,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange, currentView
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 10, color: "#4B6E8B", textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: 700, marginBottom: 8, paddingLeft: 4 }}>View</div>
         {([
-          { id: 'graph',   icon: '⬡', label: 'Graph View'    },
+          { id: 'graph',   icon: '⬡', label: 'Graph View'   },
           { id: 'catalog', icon: '📦', label: 'Data Catalog'  },
+          { id: 'glossary',icon: '📖', label: 'Glossary'      },
         ] as const).map(({ id, icon, label }) => (
           <button key={id} onClick={() => onViewChange(id)} style={{
             display: "flex", alignItems: "center", gap: 9, width: "100%",
