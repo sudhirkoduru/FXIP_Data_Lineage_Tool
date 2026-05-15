@@ -19,6 +19,19 @@
   --c-text-dim:    #2D5070;
   --c-text-link:   #7BAFD4;
 
+  /* Code / badge semantic colors — dark mode */
+  --c-code-field:       #7dd3fc;
+  --c-code-type:        #c4b5fd;
+  --c-code-val:         #fbbf24;
+  --c-badge-req-bg:     #064e3b;
+  --c-badge-req-text:   #34d399;
+  --c-badge-opt-bg:     #1e293b;
+  --c-pill-bg:          #1a2a4a;
+  --c-ev-in-text:       #c4b5fd;
+  --c-ev-out-text:      #fca5a5;
+  --c-topic-bg:         #1a0a0a;
+  --c-topic-text:       #fca5a5;
+
   /* Legacy aliases (kept for backwards-compat) */
   --aa-bg:      #071428;
   --aa-surface: #071a33;
@@ -40,6 +53,19 @@
   --c-text-muted:  #3a5f7a;
   --c-text-dim:    #526e85;
   --c-text-link:   #1d6fa4;
+
+  /* Code / badge semantic colors — light mode */
+  --c-code-field:       #0369a1;
+  --c-code-type:        #6d28d9;
+  --c-code-val:         #b45309;
+  --c-badge-req-bg:     #dcfce7;
+  --c-badge-req-text:   #15803d;
+  --c-badge-opt-bg:     #e4ecf5;
+  --c-pill-bg:          #dde8f4;
+  --c-ev-in-text:       #6d28d9;
+  --c-ev-out-text:      #b91c1c;
+  --c-topic-bg:         #fee2e2;
+  --c-topic-text:       #b91c1c;
 
   --aa-bg:      #f4f7fc;
   --aa-surface: #ffffff;

@@ -34,7 +34,7 @@ const ObjectCard = ({ obj, selected, onClick }: { obj: DataObject; selected: boo
         <span style={{ background: meta.color + '25', color: meta.color, border: `1px solid ${meta.color}44`, borderRadius: 5, padding: '1px 7px', fontSize: 10, fontWeight: 700 }}>
           {meta.label}
         </span>
-        <span style={{ background: '#1a2a4a', color: 'var(--c-text-muted)', borderRadius: 5, padding: '1px 7px', fontSize: 10 }}>
+        <span style={{ background: 'var(--c-pill-bg)', color: 'var(--c-text-muted)', borderRadius: 5, padding: '1px 7px', fontSize: 10 }}>
           {obj.format.split(' ')[0]}
         </span>
       </div>
@@ -55,27 +55,27 @@ const FieldRow = ({ name, type, required, description, example, enums }: {
 }) => (
   <div style={{
     borderBottom: '1px solid var(--c-border)', padding: '8px 12px',
-    background: required ? 'transparent' : 'var(--c-border)',
+    background: required ? 'transparent' : 'var(--c-bg-panel)',
   }}>
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-      <code style={{ fontSize: 12, color: '#7dd3fc', fontWeight: 700, minWidth: 160, flexShrink: 0 }}>{name}</code>
-      <code style={{ fontSize: 11, color: '#c4b5fd', minWidth: 130, flexShrink: 0 }}>{type}</code>
+      <code style={{ fontSize: 12, color: 'var(--c-code-field)', fontWeight: 700, minWidth: 160, flexShrink: 0 }}>{name}</code>
+      <code style={{ fontSize: 11, color: 'var(--c-code-type)', minWidth: 130, flexShrink: 0 }}>{type}</code>
       <span style={{
         fontSize: 9, padding: '2px 5px', borderRadius: 4, flexShrink: 0, marginTop: 1,
-        background: required ? '#064e3b' : '#1e293b',
-        color: required ? '#34d399' : 'var(--c-text-muted)', fontWeight: 700,
+        background: required ? 'var(--c-badge-req-bg)' : 'var(--c-badge-opt-bg)',
+        color: required ? 'var(--c-badge-req-text)' : 'var(--c-text-muted)', fontWeight: 700,
       }}>{required ? 'required' : 'optional'}</span>
     </div>
-    <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, paddingLeft: 2 }}>{description}</div>
+    <div style={{ fontSize: 11, color: 'var(--c-text-3)', marginTop: 4, paddingLeft: 2 }}>{description}</div>
     {example && (
       <div style={{ fontSize: 10, color: '#F59E0B', marginTop: 3, paddingLeft: 2 }}>
-        e.g. <code style={{ color: '#fbbf24' }}>{example}</code>
+        e.g. <code style={{ color: 'var(--c-code-val)' }}>{example}</code>
       </div>
     )}
     {enums && enums.length > 0 && (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4, paddingLeft: 2 }}>
         {enums.map(v => (
-          <span key={v} style={{ background: '#7C3AED22', color: '#c4b5fd', border: '1px solid #7C3AED44', borderRadius: 4, padding: '1px 6px', fontSize: 9 }}>{v}</span>
+          <span key={v} style={{ background: '#7C3AED22', color: 'var(--c-code-type)', border: '1px solid #7C3AED44', borderRadius: 4, padding: '1px 6px', fontSize: 9 }}>{v}</span>
         ))}
       </div>
     )}
@@ -97,7 +97,7 @@ const EventRow = ({ ev }: { ev: typeof domainEvents[0] }) => {
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-1)' }}>{ev.name}</span>
         <span style={{
           fontSize: 10, background: ev.direction === 'incoming' ? '#7C3AED22' : '#ED1C2E22',
-          color: ev.direction === 'incoming' ? '#c4b5fd' : '#fca5a5',
+          color: ev.direction === 'incoming' ? 'var(--c-ev-in-text)' : 'var(--c-ev-out-text)',
           border: `1px solid ${ev.direction === 'incoming' ? '#7C3AED44' : '#ED1C2E44'}`,
           borderRadius: 5, padding: '1px 6px',
         }}>{ev.direction}</span>
@@ -108,18 +108,18 @@ const EventRow = ({ ev }: { ev: typeof domainEvents[0] }) => {
         </div>
       )}
       {ev.topic && (
-        <div style={{ fontFamily: 'monospace', fontSize: 10, color: '#fca5a5', background: '#1a0a0a', borderRadius: 4, padding: '2px 8px', display: 'inline-block', marginBottom: 5 }}>
+        <div style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--c-topic-text)', background: 'var(--c-topic-bg)', borderRadius: 4, padding: '2px 8px', display: 'inline-block', marginBottom: 5 }}>
           {ev.topic}
         </div>
       )}
       <div style={{ fontSize: 11, color: 'var(--c-text-muted)', marginBottom: 4 }}>{ev.description}</div>
-      <div style={{ fontSize: 10, color: '#64748b' }}>
+      <div style={{ fontSize: 10, color: 'var(--c-text-3)' }}>
         <span style={{ color: '#F59E0B', fontWeight: 600 }}>Trigger: </span>{ev.trigger}
       </div>
       {ev.format && (
-        <div style={{ fontSize: 10, color: '#64748b', marginTop: 3 }}>
-          <span style={{ color: '#64748b', fontWeight: 600 }}>Format: </span>
-          <code style={{ color: '#7dd3fc' }}>{ev.format}</code>
+        <div style={{ fontSize: 10, color: 'var(--c-text-3)', marginTop: 3 }}>
+          <span style={{ color: 'var(--c-text-muted)', fontWeight: 600 }}>Format: </span>
+          <code style={{ color: 'var(--c-code-field)' }}>{ev.format}</code>
         </div>
       )}
     </div>
@@ -141,7 +141,7 @@ const SamplePayload = ({ payload }: { payload: string }) => {
       {open && (
         <pre style={{
           marginTop: 6, background: 'var(--c-bg-app)', border: '1px solid var(--c-border)', borderRadius: 8,
-          padding: '10px 12px', fontSize: 11, color: '#7dd3fc', overflowX: 'auto',
+          padding: '10px 12px', fontSize: 11, color: 'var(--c-code-field)', overflowX: 'auto',
           fontFamily: 'monospace', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
         }}>
           {payload}
@@ -204,7 +204,7 @@ const DetailPanel = ({ obj }: { obj: DataObject }) => {
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {relatedServices.map(s => (
-                <span key={s.id} style={{ background: '#0078D222', color: '#7dd3fc', border: '1px solid #0078D244', borderRadius: 7, padding: '4px 10px', fontSize: 11, fontWeight: 700 }}>
+                <span key={s.id} style={{ background: '#0078D222', color: 'var(--c-code-field)', border: '1px solid #0078D244', borderRadius: 7, padding: '4px 10px', fontSize: 11, fontWeight: 700 }}>
                   {s.acronym}
                   <span style={{ fontWeight: 400, color: 'var(--c-text-muted)', fontSize: 10 }}> {s.name}</span>
                 </span>
@@ -303,7 +303,7 @@ const DataCatalog: React.FC = () => {
               <button onClick={() => setDomainFilter('all')} style={{
                 background: domainFilter === 'all' ? '#0078D2' : 'var(--c-bg-elevated)',
                 border: `1px solid ${domainFilter === 'all' ? '#0078D2' : 'var(--c-border)'}`,
-                borderRadius: 20, padding: '3px 10px', fontSize: 10, color: 'var(--c-text-2)', cursor: 'pointer', fontWeight: domainFilter === 'all' ? 700 : 400,
+                borderRadius: 20, padding: '3px 10px', fontSize: 10, color: domainFilter === 'all' ? '#fff' : 'var(--c-text-muted)', cursor: 'pointer', fontWeight: domainFilter === 'all' ? 700 : 400,
               }}>All</button>
               {domains.map(d => {
                 const m = DOMAIN_META[d];
@@ -312,7 +312,7 @@ const DataCatalog: React.FC = () => {
                     background: domainFilter === d ? m.color + '33' : 'var(--c-bg-elevated)',
                     border: `1px solid ${domainFilter === d ? m.color : 'var(--c-border)'}`,
                     borderRadius: 20, padding: '3px 10px', fontSize: 10,
-                    color: domainFilter === d ? m.color : '#64748b', cursor: 'pointer', fontWeight: domainFilter === d ? 700 : 400,
+                    color: domainFilter === d ? m.color : 'var(--c-text-muted)', cursor: 'pointer', fontWeight: domainFilter === d ? 700 : 400,
                   }}>{m.icon} {m.label}</button>
                 );
               })}
@@ -358,7 +358,7 @@ const DataCatalog: React.FC = () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--c-text-muted)', gap: 16 }}>
             <div style={{ fontSize: 48 }}>📦</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#64748b' }}>Select a Data Object</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text-muted)' }}>Select a Data Object</div>
             <div style={{ fontSize: 12, color: 'var(--c-text-muted)', textAlign: 'center', maxWidth: 300 }}>
               Click any card on the left to view schema fields, related events, and service usage.
             </div>
