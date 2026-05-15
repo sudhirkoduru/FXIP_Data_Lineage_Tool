@@ -19,7 +19,7 @@ import type { NodeType } from '../data/lineage';
 // EXPLICIT POSITIONS — mirroring FXIP Integration Context View diagram
 // Layout: AWS Cloud (top) → Azure Services → Kafka Backbone → On-Prem (bottom)
 // ─────────────────────────────────────────────────────────────────────────────
-const CANVAS_W = 2080;
+const CANVAS_W = 2450;
 
 const POSITIONS: Record<string, { x: number; y: number }> = {
   // ── AWS / Cloud External (y ≈ 60) ──────────────────────────────────────────
@@ -65,27 +65,28 @@ const POSITIONS: Record<string, { x: number; y: number }> = {
   FXIP_FltKeysIntegServiceMGW_AWS: { x: 1280, y: 800 },
 
   // ── On-Prem / External Sinks (y ≈ 1280) ───────────────────────────────────
-  IBM_MQ:          { x: 60,   y: 1280 },
-  RabbitMQ:        { x: 280,  y: 1280 },
-  FOS:             { x: 500,  y: 1280 },
-  AzureServiceBus: { x: 760,  y: 1280 },
-  DocumentDB:      { x: 1020, y: 1280 },
-  OpsHub:          { x: 1280, y: 1280 },
+  IBM_MQ:          { x: 60,   y: 1570 },
+  RabbitMQ:        { x: 280,  y: 1570 },
+  FOS:             { x: 500,  y: 1570 },
+  AzureServiceBus: { x: 760,  y: 1570 },
+  DocumentDB:      { x: 1020, y: 1570 },
+  OpsHub:          { x: 1280, y: 1570 },
 };
 
-// Kafka topics grouped within the backbone lane (y ≈ 1020-1155)
+// Kafka topics — one column per group, topics stack vertically within it
+// Columns spaced 300 px apart so 255 px-wide nodes have a visible gap
 const KAFKA_GROUP_X: Record<string, number> = {
-  'flightplan':      60,
-  'flightplan-mq':   400,
-  'flightplan-ext':  760,
-  'acars':           1060,
-  'flight-event':    1240,
-  'flight-event-mq': 1240,
-  'maint-event':     1620,
-  'flightkeys-event':1820,
+  'flightplan':       30,
+  'flightplan-mq':    330,
+  'flightplan-ext':   630,
+  'acars':            930,
+  'flight-event':     1200,
+  'flight-event-mq':  1500,   // was 1240 (same as flight-event) — fixed
+  'maint-event':      1800,
+  'flightkeys-event': 2100,
 };
-const KAFKA_Y_BASE = 1000;
-const KAFKA_ROW_H  = 58;
+const KAFKA_Y_BASE = 962;
+const KAFKA_ROW_H  = 90;    // node height ~75 px + 15 px breathing room
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SWIMLANE BACKGROUND NODES
@@ -124,11 +125,11 @@ const buildLanes = (): Node[] => [
   {
     id: 'lane-kafka', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
     position: { x: -30, y: 950 },
-    data: { label: '⚡  OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', color: '#ED1C2E09', border: '#ED1C2E', width: CANVAS_W, height: 225 } as LaneData,
+    data: { label: '⚡  OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', color: '#ED1C2E09', border: '#ED1C2E', width: CANVAS_W, height: 570 } as LaneData,
   },
   {
     id: 'lane-onprem', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
-    position: { x: -30, y: 1200 },
+    position: { x: -30, y: 1545 },
     data: { label: '🏢  On-Premises / External Sinks', color: '#10B98109', border: '#10B981', width: CANVAS_W, height: 180 } as LaneData,
   },
 ];
