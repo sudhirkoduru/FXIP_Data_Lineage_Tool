@@ -14,7 +14,8 @@ Built with React + Vite + TypeScript. Branded in American Airlines navy, red, an
 | **Node Filters** | Toggle visibility of API services, processors, adapters, MGW, tools, Kafka topics, and external systems |
 | **Header Search** | Real-time service name search — dims non-matching nodes |
 | **Service Sidebar** | 3-tab detail panel: Overview, Domain Events, Schema Objects |
-| **Data Catalog** | Searchable catalog of 16 Data Objects and 20 Domain Events derived from real XSD/Avro/Swagger contracts |
+| **Data Catalog** | Three-tab catalog — 16 Data Objects, 20 Domain Events, and 19 FXIP Components (APIs, Processors, Adapters, Tools) derived from real XSD/Avro/Swagger contracts |
+| **FXIP Components** | Per-service detail: Docker image, REST endpoints, Kafka produces/consumes, external integrations, and dependency map — browsable by component type |
 | **Glossary** | Searchable glossary of 40+ authentic aviation and platform terms + 71 ICAO/IATA airline and airport codes |
 
 ---
@@ -123,15 +124,19 @@ Below the view switcher (in Graph View) are node-type filter toggles:
 The swimlane graph shows the complete FXIP data flow across four functional layers:
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│  AA APIs / Services      FXD_SOAR_*_API services                  │
-├────────────────────────────────────────────────────────────────────┤
-│  Processors              FlightPlan, FlightData, AircraftData ...  │
-├────────────────────────────────────────────────────────────────────┤
-│  Adapters / Tools        OpsHub adapters, Audit, FOS updater ...   │
-├────────────────────────────────────────────────────────────────────┤
-│  MGW / External          IBM MQ bridges, FlightKeys, Fusion, FOS   │
-└────────────────────────────────────────────────────────────────────┘
+┌────────┬───────────────────────────────────────────────────────────┐
+│ AWS /  │ ConfluentCloud · FlightKeys · OpsHub (external cloud)     │
+│ Cloud  │                                                           │
+├────────┼───────────────────────────────────────────────────────────┤
+│ Azure  │ API services · Processors · Adapters · MGW services       │
+│        │ (AKS, Azure Event Hub, DocumentDB, Azure Service Bus)     │
+├────────┼───────────────────────────────────────────────────────────┤
+│ Kafka  │ 27 topics across 8 groups: flight-plan · acars ·          │
+│ / Hub  │ flight-event · maint-event · flightkeys-event …           │
+├────────┼───────────────────────────────────────────────────────────┤
+│ On-    │ IBM MQ · RabbitMQ · FOS · Azure Service Bus ·             │
+│ Prem   │ DocumentDB · OpsHub (external sinks)                      │
+└────────┴───────────────────────────────────────────────────────────┘
 ```
 
 ### Node Types
@@ -179,6 +184,19 @@ Use the domain filter pills to narrow by: ACARS · Fuel · Flight Plan · Aircra
 ### Domain Events Tab
 
 20 domain events covering: ACARS uplinks/downlinks, OFP lifecycle, aircraft status/OTS/DMI, crew assignments, OOOI flight movement, and FlightKeys notifications.
+
+### FXIP Components Tab
+
+19 FXIP platform services browsable by component type:
+
+| Sub-Tab | Count | Includes |
+|---|---|---|
+| 🔌 APIs | 9 | Fusion ACARS, FlightPlan, FlightData, AircraftData, FlightKeys, Maintenance … |
+| ⚙️ Processors | 5 | FlightPlan Processor, FlightData Processor, AircraftData Processor … |
+| 🔄 Adapters | 4 | FlightData Adapter, FlightKeys Adapter, OpsHub adapters … |
+| 🛠️ Tools | 1 | Audit Log Processor |
+
+Click any service card to view: Docker image · REST endpoints · Kafka produces/consumes (topic chips) · external integrations · dependency map with calledBy/calls resolved to acronyms.
 
 ---
 
@@ -250,12 +268,12 @@ Glossary definitions cite per-term: ICAO Annex 2/6/11, Doc 4444/7910/8585; ARINC
 
 | Layer | Technology |
 |---|---|
-| Framework | React 18 |
-| Build tool | Vite 5 (react-ts template) |
-| Language | TypeScript 5 (strict, verbatimModuleSyntax) |
+| Framework | React 19 |
+| Build tool | Vite 8 (react-ts template) |
+| Language | TypeScript 6 (strict, verbatimModuleSyntax) |
 | Graph rendering | ReactFlow 11 |
-| Icons | lucide-react |
-| Container | Docker (node:20-alpine + nginx:1.27-alpine) |
+| Icons | lucide-react · react-icons/si · react-icons/fa |
+| Container | Docker / Podman (node:20-alpine + nginx:1.27-alpine) |
 | Orchestration | Kubernetes + Helm 3 |
 
 ---
