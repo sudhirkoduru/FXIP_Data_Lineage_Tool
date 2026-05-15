@@ -1,5 +1,8 @@
 ﻿import { useCallback, useMemo, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { Server, Building2 } from 'lucide-react';
+import { SiApachekafka, SiRabbitmq, SiMongodb } from 'react-icons/si';
+import { FaAws, FaWindows } from 'react-icons/fa';
 import ReactFlow, {
   Background,
   Controls,
@@ -89,9 +92,47 @@ const KAFKA_Y_BASE = 962;
 const KAFKA_ROW_H  = 90;    // node height ~75 px + 15 px breathing room
 
 // ─────────────────────────────────────────────────────────────────────────────
+// TECH BRAND ICONS
+// ─────────────────────────────────────────────────────────────────────────────
+const ICON_COLORS: Record<string, string> = {
+  aws:      '#FF9900',
+  azure:    '#0078D4',
+  kafka:    '#ffffff',
+  ibm:      '#052FAD',
+  rabbitmq: '#FF6600',
+  mongodb:  '#47A248',
+  onprem:   '#10B981',
+};
+
+// Map external system IDs to their brand icon key
+const EXT_ICON: Record<string, string> = {
+  ConfluentCloud:  'kafka',
+  IBM_ACARS:       'ibm',
+  IBM_MQ:          'ibm',
+  RabbitMQ:        'rabbitmq',
+  AzureServiceBus: 'azure',
+  DocumentDB:      'mongodb',
+};
+
+const TechIcon = ({ name, size = 14, color }: { name?: string; size?: number; color?: string }) => {
+  if (!name) return null;
+  const p = { size, color };
+  switch (name) {
+    case 'aws':      return <FaAws {...p} />;
+    case 'azure':    return <FaWindows {...p} />;  // Windows logo = Microsoft/Azure
+    case 'kafka':    return <SiApachekafka {...p} />;
+    case 'rabbitmq': return <SiRabbitmq {...p} />;
+    case 'mongodb':  return <SiMongodb {...p} />;
+    case 'ibm':      return <Building2 size={size} color={color} />;
+    case 'onprem':   return <Server size={size} color={color} />;
+    default:         return null;
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SWIMLANE BACKGROUND NODES
 // ─────────────────────────────────────────────────────────────────────────────
-interface LaneData { label: string; color: string; border: string; width: number; height: number }
+interface LaneData { label: string; color: string; border: string; width: number; height: number; iconKey?: string }
 
 const LaneNode = ({ data }: { data: LaneData }) => (
   <div style={{
@@ -102,11 +143,16 @@ const LaneNode = ({ data }: { data: LaneData }) => (
     pointerEvents: 'none',
   }}>
     <div style={{
-      fontSize: 11, fontWeight: 800, letterSpacing: '1.5px',
-      textTransform: 'uppercase', color: data.border,
-      padding: '10px 18px', opacity: 0.85,
+      display: 'flex', alignItems: 'center', gap: 9,
+      padding: '10px 18px',
     }}>
-      {data.label}
+      {data.iconKey && <TechIcon name={data.iconKey} size={18} color={data.border} />}
+      <span style={{
+        fontSize: 11, fontWeight: 800, letterSpacing: '1.5px',
+        textTransform: 'uppercase', color: data.border, opacity: 0.85,
+      }}>
+        {data.label}
+      </span>
     </div>
   </div>
 );
@@ -115,22 +161,22 @@ const buildLanes = (): Node[] => [
   {
     id: 'lane-cloud', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
     position: { x: -30, y: 20 },
-    data: { label: '☁  Amazon Web Services / External Cloud', color: '#FF990009', border: '#FF9900', width: CANVAS_W, height: 170 } as LaneData,
+    data: { label: 'Amazon Web Services / External Cloud', color: '#FF990009', border: '#FF9900', width: CANVAS_W, height: 170, iconKey: 'aws' } as LaneData,
   },
   {
     id: 'lane-azure', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
     position: { x: -30, y: 210 },
-    data: { label: '☁  Microsoft Azure', color: '#0078D209', border: '#0078D2', width: CANVAS_W, height: 720 } as LaneData,
+    data: { label: 'Microsoft Azure', color: '#0078D209', border: '#0078D2', width: CANVAS_W, height: 720, iconKey: 'azure' } as LaneData,
   },
   {
     id: 'lane-kafka', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
     position: { x: -30, y: 950 },
-    data: { label: '⚡  OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', color: '#ED1C2E09', border: '#ED1C2E', width: CANVAS_W, height: 570 } as LaneData,
+    data: { label: 'OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', color: '#ED1C2E09', border: '#ED1C2E', width: CANVAS_W, height: 570, iconKey: 'kafka' } as LaneData,
   },
   {
     id: 'lane-onprem', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
     position: { x: -30, y: 1545 },
-    data: { label: '🏢  On-Premises / External Sinks', color: '#10B98109', border: '#10B981', width: CANVAS_W, height: 180 } as LaneData,
+    data: { label: 'On-Premises / External Sinks', color: '#10B98109', border: '#10B981', width: CANVAS_W, height: 180, iconKey: 'onprem' } as LaneData,
   },
 ];
 
@@ -192,7 +238,8 @@ const KafkaNode = ({ data }: { data: KafkaData }) => (
     <Handle type="target" position={Position.Top}    style={{ background: '#ffffff55', border: 'none' }} />
     <Handle type="source" position={Position.Right}  style={{ background: '#ffffff55', border: 'none' }} />
     <Handle type="source" position={Position.Bottom} style={{ background: '#ffffff55', border: 'none' }} />
-    <div style={{ fontSize: 8, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 8, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <SiApachekafka size={9} />
       {data.group} · {data.format}
     </div>
     <div style={{ fontSize: 10, fontWeight: 700, fontFamily: 'monospace', marginTop: 2, wordBreak: 'break-all', lineHeight: 1.3 }}>
@@ -205,24 +252,32 @@ const KafkaNode = ({ data }: { data: KafkaData }) => (
   </div>
 );
 
-interface ExtData { label: string; type: string; color: string; raw: unknown }
+interface ExtData { label: string; type: string; color: string; iconKey?: string; raw: unknown }
 
-const ExternalNode = ({ data }: { data: ExtData }) => (
-  <div style={{
-    background: `${data.color}1a`,
-    border: `2px dashed ${data.color}`,
-    borderRadius: 8, padding: '8px 13px', minWidth: 145,
-    boxShadow: `0 0 10px ${data.color}33`,
-    color: 'var(--c-text-1)', cursor: 'pointer', textAlign: 'center',
-  }}>
-    <Handle type="target" position={Position.Left}   style={{ background: '#ffffff55', border: 'none' }} />
-    <Handle type="target" position={Position.Top}    style={{ background: '#ffffff55', border: 'none' }} />
-    <Handle type="source" position={Position.Right}  style={{ background: '#ffffff55', border: 'none' }} />
-    <Handle type="source" position={Position.Bottom} style={{ background: '#ffffff55', border: 'none' }} />
-    <div style={{ fontSize: 9, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{data.type}</div>
-    <div style={{ fontSize: 12, fontWeight: 700, marginTop: 3 }}>{data.label}</div>
-  </div>
-);
+const ExternalNode = ({ data }: { data: ExtData }) => {
+  const iconColor = data.iconKey ? (ICON_COLORS[data.iconKey] ?? data.color) : data.color;
+  return (
+    <div style={{
+      background: `${data.color}1a`,
+      border: `2px dashed ${data.color}`,
+      borderRadius: 8, padding: '8px 13px', minWidth: 145,
+      boxShadow: `0 0 10px ${data.color}33`,
+      color: 'var(--c-text-1)', cursor: 'pointer', textAlign: 'center',
+    }}>
+      <Handle type="target" position={Position.Left}   style={{ background: '#ffffff55', border: 'none' }} />
+      <Handle type="target" position={Position.Top}    style={{ background: '#ffffff55', border: 'none' }} />
+      <Handle type="source" position={Position.Right}  style={{ background: '#ffffff55', border: 'none' }} />
+      <Handle type="source" position={Position.Bottom} style={{ background: '#ffffff55', border: 'none' }} />
+      <div style={{ fontSize: 9, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{data.type}</div>
+      {data.iconKey && (
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '5px 0 3px' }}>
+          <TechIcon name={data.iconKey} size={24} color={iconColor} />
+        </div>
+      )}
+      <div style={{ fontSize: 12, fontWeight: 700, marginTop: data.iconKey ? 2 : 3 }}>{data.label}</div>
+    </div>
+  );
+};
 
 const nodeTypes: NodeTypes = {
   laneNode:     LaneNode as never,
@@ -291,7 +346,7 @@ function buildNodes(filter: string[], searchTerm: string): Node[] {
         id: ext.id,
         type: 'externalNode',
         position: POSITIONS[ext.id] ?? { x: 1760, y: 600 },
-        data: { label: ext.name, type: ext.type, color: NODE_COLORS.external, raw: ext },
+        data: { label: ext.name, type: ext.type, color: NODE_COLORS.external, iconKey: EXT_ICON[ext.id], raw: ext },
       });
     });
   }
