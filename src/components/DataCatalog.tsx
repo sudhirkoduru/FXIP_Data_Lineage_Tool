@@ -1,7 +1,7 @@
 ﻿import React, { useState, useMemo } from "react";
 import { Search, Database, Layers, Zap, ChevronDown, ChevronRight, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { dataObjects, domainEvents, services } from "../data/lineage";
-import type { DataObject, DataDomain } from "../data/lineage";
+import type { DataObject, DataDomain, Service } from "../data/lineage";
 
 // ── Domain config ─────────────────────────────────────────────────────────────
 const DOMAIN_META: Record<DataDomain, { label: string; color: string; icon: string }> = {
@@ -13,6 +13,14 @@ const DOMAIN_META: Record<DataDomain, { label: string; color: string; icon: stri
   crew:        { label: 'Crew',         color: '#10B981', icon: '👤' },
   nav:         { label: 'Navigation',   color: '#14B8A6', icon: '🗺' },
   maintenance: { label: 'Maintenance',  color: '#6B7280', icon: '🔧' },
+};
+
+// ── FXIP Component type config ────────────────────────────────────────────────
+const COMP_TYPE_META: Record<string, { label: string; icon: string; color: string }> = {
+  api:       { label: 'APIs',       icon: '🔌', color: '#0078D2' },
+  processor: { label: 'Processors', icon: '⚙️',  color: '#7C3AED' },
+  adapter:   { label: 'Adapters',   icon: '🔄', color: '#0EA5E9' },
+  tool:      { label: 'Tools',      icon: '🛠️',  color: '#6B7280' },
 };
 
 // ── Object Card ───────────────────────────────────────────────────────────────
@@ -233,16 +241,161 @@ const DetailPanel = ({ obj }: { obj: DataObject }) => {
   );
 };
 
+// ── Service Card ──────────────────────────────────────────────────────────────
+const ServiceCard = ({ svc, selected, onClick }: { svc: Service; selected: boolean; onClick: () => void }) => {
+  const meta = COMP_TYPE_META[svc.type] ?? COMP_TYPE_META.api;
+  const kafkaTotal = svc.kafkaConsumes.length + svc.kafkaProduces.length;
+  return (
+    <div onClick={onClick} style={{
+      background: selected ? `${meta.color}22` : 'var(--c-bg-elevated)',
+      border: `1.5px solid ${selected ? meta.color : 'var(--c-border)'}`,
+      borderRadius: 10, padding: '12px 14px', cursor: 'pointer',
+      transition: 'all 0.15s',
+      boxShadow: selected ? `0 0 12px ${meta.color}44` : 'none',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <span style={{ fontSize: 14 }}>{meta.icon}</span>
+        <span style={{ background: meta.color + '25', color: meta.color, border: `1px solid ${meta.color}44`, borderRadius: 5, padding: '1px 7px', fontSize: 10, fontWeight: 700 }}>
+          {svc.acronym}
+        </span>
+        <span style={{ background: 'var(--c-pill-bg)', color: 'var(--c-text-muted)', borderRadius: 5, padding: '1px 7px', fontSize: 10, fontFamily: 'monospace' }}>
+          {svc.appName}
+        </span>
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text-1)', marginBottom: 4 }}>{svc.name}</div>
+      <div style={{ fontSize: 11, color: 'var(--c-text-muted)', lineHeight: 1.5 }}>{svc.description.slice(0, 100)}{svc.description.length > 100 ? '…' : ''}</div>
+      <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+        {svc.restEndpoints.length > 0 && <span style={{ fontSize: 10, color: 'var(--c-text-muted)' }}>{svc.restEndpoints.length} endpoint{svc.restEndpoints.length !== 1 ? 's' : ''}</span>}
+        {kafkaTotal > 0 && <><span style={{ color: 'var(--c-border)' }}>·</span><span style={{ fontSize: 10, color: 'var(--c-text-muted)' }}>{svc.kafkaConsumes.length}↓ {svc.kafkaProduces.length}↑ Kafka</span></>}
+        {svc.externalSystems.length > 0 && <><span style={{ color: 'var(--c-border)' }}>·</span><span style={{ fontSize: 10, color: 'var(--c-text-muted)' }}>{svc.externalSystems.length} integration{svc.externalSystems.length !== 1 ? 's' : ''}</span></>}
+      </div>
+    </div>
+  );
+};
+
+// ── Service Detail Panel ──────────────────────────────────────────────────────
+const ServiceDetailPanel = ({ svc }: { svc: Service }) => {
+  const meta = COMP_TYPE_META[svc.type] ?? COMP_TYPE_META.api;
+  return (
+    <div style={{ height: '100%', overflowY: 'auto' }}>
+      {/* Header */}
+      <div style={{ background: 'var(--c-bg-sidebar)', borderBottom: `3px solid ${meta.color}`, padding: '18px 22px', position: 'sticky', top: 0, zIndex: 1 }}>
+        <div style={{ fontSize: 10, color: meta.color, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px' }}>
+          {meta.icon} {meta.label.slice(0, -1)} · FXIP Component
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 5 }}>
+          <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--c-text-1)' }}>{svc.acronym}</span>
+          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--c-text-muted)' }}>— {svc.name}</span>
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--c-text-link)', marginTop: 4 }}>{svc.description}</div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+          <span style={{ background: 'var(--c-bg-elevated)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: 'var(--c-text-link)' }}>🐋 {svc.appName}</span>
+          <span style={{ background: 'var(--c-bg-elevated)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: 'var(--c-text-link)' }}>☁ {svc.namespace}</span>
+        </div>
+      </div>
+
+      <div style={{ padding: '16px 22px' }}>
+        {/* Docker image */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 8 }}>Docker Image</div>
+          <code style={{ fontSize: 11, color: 'var(--c-code-field)', background: 'var(--c-bg-elevated)', border: '1px solid var(--c-border)', borderRadius: 6, padding: '6px 10px', display: 'block', wordBreak: 'break-all' }}>
+            {svc.dockerImage}
+          </code>
+        </div>
+
+        {/* REST endpoints */}
+        {svc.restEndpoints.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>
+              REST Endpoints ({svc.restEndpoints.length})
+            </div>
+            <div style={{ background: 'var(--c-bg-app)', border: '1px solid var(--c-border)', borderRadius: 10, overflow: 'hidden' }}>
+              {svc.restEndpoints.map((ep, i) => (
+                <div key={i} style={{ padding: '8px 12px', borderBottom: i < svc.restEndpoints.length - 1 ? '1px solid var(--c-border)' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <code style={{ fontSize: 10, color: '#F59E0B', fontWeight: 700, minWidth: 90, flexShrink: 0 }}>{ep.method}</code>
+                    <code style={{ fontSize: 11, color: 'var(--c-code-field)' }}>{ep.path}</code>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--c-text-3)', marginTop: 3 }}>{ep.description}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Kafka */}
+        {(svc.kafkaConsumes.length > 0 || svc.kafkaProduces.length > 0) && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>Kafka Topics</div>
+            {svc.kafkaConsumes.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 10, color: '#7C3AED', fontWeight: 700, marginBottom: 6 }}>↓ Consumes ({svc.kafkaConsumes.length})</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {svc.kafkaConsumes.map(t => <div key={t} style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--c-topic-text)', background: 'var(--c-topic-bg)', borderRadius: 4, padding: '2px 8px' }}>{t}</div>)}
+                </div>
+              </div>
+            )}
+            {svc.kafkaProduces.length > 0 && (
+              <div>
+                <div style={{ fontSize: 10, color: '#ED1C2E', fontWeight: 700, marginBottom: 6 }}>↑ Produces ({svc.kafkaProduces.length})</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {svc.kafkaProduces.map(t => <div key={t} style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--c-topic-text)', background: 'var(--c-topic-bg)', borderRadius: 4, padding: '2px 8px' }}>{t}</div>)}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Integrations */}
+        {(svc.externalSystems.length > 0 || svc.databases.length > 0) && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>Integrations</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {svc.externalSystems.map(s => <span key={s} style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144', borderRadius: 7, padding: '4px 10px', fontSize: 11, fontWeight: 700 }}>🌐 {s}</span>)}
+              {svc.databases.map(d => <span key={d} style={{ background: '#14B8A622', color: '#14B8A6', border: '1px solid #14B8A644', borderRadius: 7, padding: '4px 10px', fontSize: 11, fontWeight: 700 }}>🗄 {d}</span>)}
+            </div>
+          </div>
+        )}
+
+        {/* Dependency map */}
+        {(svc.calledBy.length > 0 || svc.calls.length > 0) && (
+          <div>
+            <div style={{ fontSize: 10, color: 'var(--c-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>Dependency Map</div>
+            {svc.calledBy.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 10, color: 'var(--c-text-muted)', marginBottom: 5 }}>Called by</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {svc.calledBy.map(id => { const s = services.find(x => x.id === id); return <span key={id} style={{ background: '#7C3AED22', color: 'var(--c-code-type)', border: '1px solid #7C3AED44', borderRadius: 7, padding: '3px 8px', fontSize: 10, fontWeight: 700 }}>{s ? s.acronym : id}</span>; })}
+                </div>
+              </div>
+            )}
+            {svc.calls.length > 0 && (
+              <div>
+                <div style={{ fontSize: 10, color: 'var(--c-text-muted)', marginBottom: 5 }}>Calls</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {svc.calls.map(id => { const s = services.find(x => x.id === id); return <span key={id} style={{ background: '#0078D222', color: 'var(--c-code-field)', border: '1px solid #0078D244', borderRadius: 7, padding: '3px 8px', fontSize: 10, fontWeight: 700 }}>{s ? s.acronym : id}</span>; })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA CATALOG MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-type CatalogTab = 'objects' | 'events';
+type CatalogTab = 'objects' | 'events' | 'components';
 
 const DataCatalog: React.FC = () => {
   const [search, setSearch] = useState('');
   const [domainFilter, setDomainFilter] = useState<DataDomain | 'all'>('all');
   const [selected, setSelected] = useState<DataObject | null>(null);
   const [tab, setTab] = useState<CatalogTab>('objects');
+  const [componentSubTab, setComponentSubTab] = useState('api');
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   const term = search.toLowerCase();
 
@@ -261,6 +414,13 @@ const DataCatalog: React.FC = () => {
         (e.topic?.toLowerCase().includes(term) ?? false);
     }), [term]);
 
+  const filteredServices = useMemo(() =>
+    services.filter(s =>
+      s.type === componentSubTab &&
+      (!term || s.name.toLowerCase().includes(term) || s.acronym.toLowerCase().includes(term) ||
+        s.description.toLowerCase().includes(term) || s.appName.toLowerCase().includes(term))
+    ), [componentSubTab, term]);
+
   const domains = Array.from(new Set(dataObjects.map(o => o.domain))) as DataDomain[];
 
   return (
@@ -270,8 +430,8 @@ const DataCatalog: React.FC = () => {
 
         {/* tab bar */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)', background: 'var(--c-bg-sidebar)' }}>
-          {([['objects', '📦 Data Objects'], ['events', '⚡ Domain Events']] as const).map(([t, label]) => (
-            <button key={t} onClick={() => setTab(t)} style={{
+          {([['objects', '📦 Data Objects'], ['events', '⚡ Domain Events'], ['components', '🔧 FXIP Components']] as const).map(([t, label]) => (
+            <button key={t} onClick={() => { setTab(t); setSelected(null); setSelectedService(null); }} style={{
               flex: 1, padding: '12px 0', fontSize: 12, fontWeight: tab === t ? 800 : 500,
               color: tab === t ? 'var(--c-text-1)' : 'var(--c-text-muted)',
               background: 'none', border: 'none', cursor: 'pointer',
@@ -288,7 +448,7 @@ const DataCatalog: React.FC = () => {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={tab === 'objects' ? 'Search fields, types, descriptions…' : 'Search events, topics, triggers…'}
+              placeholder={tab === 'objects' ? 'Search fields, types, descriptions…' : tab === 'events' ? 'Search events, topics, triggers…' : 'Search components, endpoints…'}
               style={{
                 width: '100%', padding: '7px 10px 7px 30px', fontSize: 12,
                 background: 'var(--c-bg-elevated)', border: '1px solid var(--c-border)', borderRadius: 8, color: 'var(--c-text-2)',
@@ -318,13 +478,31 @@ const DataCatalog: React.FC = () => {
               })}
             </div>
           )}
+          {/* component type sub-tabs */}
+          {tab === 'components' && (
+            <div style={{ display: 'flex', gap: 5, marginTop: 10, flexWrap: 'wrap' }}>
+              {(['api', 'processor', 'adapter', 'tool'] as const).map(t => {
+                const m = COMP_TYPE_META[t];
+                return (
+                  <button key={t} onClick={() => { setComponentSubTab(t); setSelectedService(null); }} style={{
+                    background: componentSubTab === t ? m.color + '33' : 'var(--c-bg-elevated)',
+                    border: `1px solid ${componentSubTab === t ? m.color : 'var(--c-border)'}`,
+                    borderRadius: 20, padding: '3px 12px', fontSize: 10,
+                    color: componentSubTab === t ? m.color : 'var(--c-text-muted)', cursor: 'pointer', fontWeight: componentSubTab === t ? 700 : 400,
+                  }}>{m.icon} {m.label}</button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* stats bar */}
         <div style={{ padding: '6px 14px', background: 'var(--c-bg-panel)', borderBottom: '1px solid var(--c-border)', fontSize: 10, color: 'var(--c-text-muted)' }}>
           {tab === 'objects'
             ? `${filteredObjects.length} of ${dataObjects.length} objects · ${filteredObjects.reduce((s, o) => s + o.fields.length, 0)} fields`
-            : `${filteredEvents.length} of ${domainEvents.length} events`
+            : tab === 'events'
+              ? `${filteredEvents.length} of ${domainEvents.length} events`
+              : `${filteredServices.length} ${COMP_TYPE_META[componentSubTab]?.label ?? 'components'}`
           }
         </div>
 
@@ -338,7 +516,7 @@ const DataCatalog: React.FC = () => {
                   <ObjectCard obj={o} selected={selected?.id === o.id} onClick={() => setSelected(selected?.id === o.id ? null : o)} />
                 </div>
               ))
-          ) : (
+          ) : tab === 'events' ? (
             filteredEvents.length === 0
               ? <div style={{ textAlign: 'center', color: 'var(--c-text-muted)', padding: '40px 0', fontSize: 13 }}>No events match search</div>
               : filteredEvents.map(ev => (
@@ -347,13 +525,46 @@ const DataCatalog: React.FC = () => {
                   {ev.samplePayload && <SamplePayload payload={ev.samplePayload} />}
                 </div>
               ))
+          ) : (
+            filteredServices.length === 0
+              ? <div style={{ textAlign: 'center', color: 'var(--c-text-muted)', padding: '40px 0', fontSize: 13 }}>No components match search</div>
+              : filteredServices.map(svc => (
+                <div key={svc.id} style={{ marginBottom: 8 }}>
+                  <ServiceCard svc={svc} selected={selectedService?.id === svc.id} onClick={() => setSelectedService(selectedService?.id === svc.id ? null : svc)} />
+                </div>
+              ))
           )}
         </div>
       </div>
 
       {/* ── Right panel: detail ───────────────────────────────────────────── */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        {selected ? (
+        {tab === 'components' ? (
+          selectedService ? (
+            <ServiceDetailPanel svc={selectedService} />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--c-text-muted)', gap: 16 }}>
+              <div style={{ fontSize: 48 }}>🔧</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text-muted)' }}>Select a Component</div>
+              <div style={{ fontSize: 12, color: 'var(--c-text-muted)', textAlign: 'center', maxWidth: 320 }}>
+                Browse APIs, Processors, Adapters, and Tools using the sub-tabs on the left.
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 20 }}>
+                {(['api', 'processor', 'adapter', 'tool'] as const).map(t => {
+                  const m = COMP_TYPE_META[t];
+                  const cnt = services.filter(s => s.type === t).length;
+                  return (
+                    <div key={t} style={{ background: 'var(--c-bg-elevated)', border: `1px solid ${m.color}33`, borderRadius: 10, padding: '14px 18px', textAlign: 'center' }}>
+                      <div style={{ fontSize: 22 }}>{m.icon}</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: m.color, marginTop: 4 }}>{cnt}</div>
+                      <div style={{ fontSize: 11, color: 'var(--c-text-muted)', marginTop: 2 }}>{m.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )
+        ) : selected ? (
           <DetailPanel obj={selected} />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--c-text-muted)', gap: 16 }}>

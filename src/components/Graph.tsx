@@ -67,28 +67,28 @@ const POSITIONS: Record<string, { x: number; y: number }> = {
   FXIP_DataMaintServiceMGW_BCP:    { x: 1280, y: 630 },
   FXIP_FltKeysIntegServiceMGW_AWS: { x: 1280, y: 800 },
 
-  // ── On-Prem / External Sinks (y ≈ 1280) ───────────────────────────────────
-  IBM_MQ:          { x: 60,   y: 1570 },
-  RabbitMQ:        { x: 280,  y: 1570 },
-  FOS:             { x: 500,  y: 1570 },
-  AzureServiceBus: { x: 760,  y: 1570 },
-  DocumentDB:      { x: 1020, y: 1570 },
-  OpsHub:          { x: 1280, y: 1570 },
+  // ── On-Prem / External Sinks (y = 1640) ────────────────────────────────────
+  IBM_MQ:          { x: 60,   y: 1640 },
+  RabbitMQ:        { x: 280,  y: 1640 },
+  FOS:             { x: 500,  y: 1640 },
+  AzureServiceBus: { x: 760,  y: 1640 },
+  DocumentDB:      { x: 1020, y: 1640 },
+  OpsHub:          { x: 1280, y: 1640 },
 };
 
 // Kafka topics — one column per group, topics stack vertically within it
 // Columns spaced 300 px apart so 255 px-wide nodes have a visible gap
 const KAFKA_GROUP_X: Record<string, number> = {
-  'flightplan':       30,
-  'flightplan-mq':    330,
-  'flightplan-ext':   630,
-  'acars':            930,
-  'flight-event':     1200,
-  'flight-event-mq':  1500,   // was 1240 (same as flight-event) — fixed
-  'maint-event':      1800,
-  'flightkeys-event': 2100,
+  'flightplan':       60,   // shifted +30 to clear the 44 px left title strip
+  'flightplan-mq':    360,
+  'flightplan-ext':   660,
+  'acars':            960,
+  'flight-event':     1230,
+  'flight-event-mq':  1530,
+  'maint-event':      1830,
+  'flightkeys-event': 2130,
 };
-const KAFKA_Y_BASE = 962;
+const KAFKA_Y_BASE = 1010;  // was 962 — pushed down to clear lane header (≥50 px gap)
 const KAFKA_ROW_H  = 90;    // node height ~75 px + 15 px breathing room
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -132,7 +132,7 @@ const TechIcon = ({ name, size = 14, color }: { name?: string; size?: number; co
 // ─────────────────────────────────────────────────────────────────────────────
 // SWIMLANE BACKGROUND NODES
 // ─────────────────────────────────────────────────────────────────────────────
-interface LaneData { label: string; color: string; border: string; width: number; height: number; iconKey?: string }
+interface LaneData { label: string; sideLabel?: string; color: string; border: string; width: number; height: number; iconKey?: string }
 
 const LaneNode = ({ data }: { data: LaneData }) => (
   <div style={{
@@ -141,42 +141,69 @@ const LaneNode = ({ data }: { data: LaneData }) => (
     border: `1.5px solid ${data.border}44`,
     borderRadius: 12,
     pointerEvents: 'none',
+    display: 'flex',
+    overflow: 'hidden',
   }}>
+    {/* Vertical left title strip */}
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 9,
-      padding: '10px 18px',
+      width: 44,
+      height: '100%',
+      flexShrink: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '14px 0',
+      gap: 12,
+      background: `${data.border}18`,
+      borderRight: `1px solid ${data.border}33`,
     }}>
-      {data.iconKey && <TechIcon name={data.iconKey} size={18} color={data.border} />}
-      <span style={{
-        fontSize: 11, fontWeight: 800, letterSpacing: '1.5px',
-        textTransform: 'uppercase', color: data.border, opacity: 0.85,
-      }}>
-        {data.label}
-      </span>
+      {/* Icon pinned to top */}
+      {data.iconKey && <TechIcon name={data.iconKey} size={20} color={data.border} />}
+      {/* Label centred in the remaining height; \n = second column in vertical-rl */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{
+          fontSize: 10,
+          fontWeight: 800,
+          letterSpacing: '1px',
+          textTransform: 'uppercase',
+          color: data.border,
+          opacity: 0.8,
+          writingMode: 'vertical-rl',
+          transform: 'rotate(180deg)',
+          whiteSpace: 'pre-wrap',
+          textAlign: 'center',
+        }}>
+          {data.sideLabel ?? data.label}
+        </span>
+      </div>
     </div>
   </div>
 );
 
 const buildLanes = (): Node[] => [
   {
+    // Cloud nodes at y=60; lane top at y=0 → 60px header clearance
     id: 'lane-cloud', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
-    position: { x: -30, y: 20 },
-    data: { label: 'Amazon Web Services / External Cloud', color: '#FF990009', border: '#FF9900', width: CANVAS_W, height: 170, iconKey: 'aws' } as LaneData,
+    position: { x: -30, y: 0 },
+    data: { label: 'Amazon Web Services / External Cloud', sideLabel: 'AWS /\nExternal Cloud', color: '#FF990009', border: '#FF9900', width: CANVAS_W, height: 180, iconKey: 'aws' } as LaneData,
   },
   {
+    // Azure nodes y=290–875; lane top y=210 → 80px header clearance; 40px gap below cloud
     id: 'lane-azure', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
-    position: { x: -30, y: 210 },
-    data: { label: 'Microsoft Azure', color: '#0078D209', border: '#0078D2', width: CANVAS_W, height: 720, iconKey: 'azure' } as LaneData,
+    position: { x: -30, y: 220 },
+    data: { label: 'Microsoft Azure', sideLabel: 'Microsoft\nAzure', color: '#0078D209', border: '#0078D2', width: CANVAS_W, height: 710, iconKey: 'azure' } as LaneData,
   },
   {
+    // KAFKA_Y_BASE=1010; lane top y=955 → 55px header clearance; 35px gap below azure
     id: 'lane-kafka', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
-    position: { x: -30, y: 950 },
-    data: { label: 'OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', color: '#ED1C2E09', border: '#ED1C2E', width: CANVAS_W, height: 570, iconKey: 'kafka' } as LaneData,
+    position: { x: -30, y: 965 },
+    data: { label: 'OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', sideLabel: 'Apache Kafka /\nAzure Event Hub', color: '#ED1C2E09', border: '#ED1C2E', width: CANVAS_W, height: 610, iconKey: 'kafka' } as LaneData,
   },
   {
+    // On-prem nodes at y=1640; lane top y=1595 → 45px header clearance; 40px gap below kafka
     id: 'lane-onprem', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
-    position: { x: -30, y: 1545 },
-    data: { label: 'On-Premises / External Sinks', color: '#10B98109', border: '#10B981', width: CANVAS_W, height: 180, iconKey: 'onprem' } as LaneData,
+    position: { x: -30, y: 1615 },
+    data: { label: 'On-Premises / External Sinks', sideLabel: 'On-Premises /\nExternal Sinks', color: '#10B98109', border: '#10B981', width: CANVAS_W, height: 200, iconKey: 'onprem' } as LaneData,
   },
 ];
 
