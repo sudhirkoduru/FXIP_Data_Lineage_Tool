@@ -301,8 +301,49 @@ FXIP_Data_Lineage_Tool/
 ├── docker-compose.yml
 ├── nginx.conf
 ├── CHANGES.md                  # Version history
+├── LINEAGE_TOOL_AGENT_INSTRUCTIONS.md  # Generic agentic instructions — reusable for any platform
 └── README.md                   # This file
 ```
+
+---
+
+## Agentic Build Instructions — Reuse for Any Platform
+
+[`LINEAGE_TOOL_AGENT_INSTRUCTIONS.md`](./LINEAGE_TOOL_AGENT_INSTRUCTIONS.md) contains a complete,
+domain-agnostic instruction set that lets an AI agent (GitHub Copilot, or any compatible agent)
+build a tool like this one for **any microservice platform hosted on GitHub enterprise**.
+
+### What the instructions cover
+
+| Section | Content |
+|---|---|
+| Project Identity | Substitutable placeholders — org, repo scope, brand colours, deploy target |
+| Repository Mining | Field-by-field lookup table: where in source code to find each data point |
+| Data Model | Reusable TypeScript interfaces (`Service`, `KafkaTopic`, `ExternalSystem`, `DataObject`, `DomainEvent`) |
+| Swimlane Architecture | Data-driven lane structure — add a lane by adding one array entry |
+| UI Components | Per-component responsibilities and constraints |
+| Glossary Schema | Source-citation rules — every term must trace to an authoritative reference |
+| Tech Stack Defaults | Opinionated defaults (React 19, Vite, TypeScript strict, ReactFlow 11, nginx) |
+| Extensibility Rules | Exact files to touch when adding a service, topic, lane, or node type |
+| Agentic Workflow | 6-phase execution plan: Discover → Model → Scaffold → Implement → Containerise → Validate |
+| Quality Gates | Checklist that must pass before the tool is considered complete |
+| Continuous Maintenance | Auto-PR pattern for keeping the data model in sync as repos evolve |
+| Reuse Checklist | Minimal substitution list to point the instructions at a new platform |
+
+### How to reuse for a different project suite
+
+1. Copy `LINEAGE_TOOL_AGENT_INSTRUCTIONS.md` into a new repo
+2. Fill in the `[PLACEHOLDER]` values in **Section 1** (platform name, GitHub org, repo scope glob, brand colours)
+3. Redefine the `LANES` array in **Section 4** to match your deployment topology
+4. Prompt an AI agent: _"Follow the instructions in LINEAGE_TOOL_AGENT_INSTRUCTIONS.md to build a data lineage tool for [your platform]"_
+5. The agent runs **Phase 1 — Discover** first; all data is mined from real repo artifacts — nothing is fabricated
+
+### Data integrity guarantee
+
+The instructions enforce a strict no-fabrication rule throughout:
+every `Service.repo` must be a real GitHub repository, every `KafkaTopic.name` must appear
+in actual source code, and every `GlossaryTerm` must cite an authoritative source.
+The quality gates in **Section 10** block completion if any entry is untraceable.
 
 ---
 
