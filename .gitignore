@@ -12,9 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Show & tell / presentation files (local only)
-show-and-tell.html
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
