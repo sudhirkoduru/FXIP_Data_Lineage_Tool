@@ -1,5 +1,5 @@
 # ─── Stage 1: Build ──────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 # ─── Stage 2: Serve ──────────────────────────────────────────────────────────
-FROM nginx:1.27-alpine
+FROM nginx:1.28-alpine
 
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf
