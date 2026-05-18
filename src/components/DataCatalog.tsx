@@ -13,6 +13,7 @@ const DOMAIN_META: Record<DataDomain, { label: string; color: string; icon: stri
   crew:        { label: 'Crew',         color: '#10B981', icon: '👤' },
   nav:         { label: 'Navigation',   color: '#14B8A6', icon: '🗺' },
   maintenance: { label: 'Maintenance',  color: '#6B7280', icon: '🔧' },
+  tps:         { label: 'TPS',          color: '#059669', icon: '🛫' },
 };
 
 // ── FXIP Component type config ────────────────────────────────────────────────

@@ -597,6 +597,127 @@ export const glossaryTerms: GlossaryTerm[] = [
       'FXD_SOAR_FlightPlan_Processor and FXD_SOAR_Audit_Log_Processor write to DocumentDB for persistent audit trail and historical flight plan storage.',
     relatedTerms: ['fxip', 'opshub'],
   },
+
+  // ── TPS / Takeoff Performance ─────────────────────────────────────────────
+  {
+    id: 'tps',
+    term: 'TPS',
+    expansion: 'Takeoff Performance System',
+    category: 'flight-planning',
+    definition:
+      'A system that computes pre-departure takeoff performance data: V-speeds (V1, VR, V2), thrust settings (TOGA/FLEX/derate), flap configuration, and performance limiting factor. Inputs include aircraft weight (TOW/ZFW), center of gravity, runway, obstacle environment, and atmospheric conditions. In FXIP, FlightKeys acts as the TPS engine.',
+    source: 'FAA AC 25.105; ICAO Annex 6 Part I',
+    context:
+      'FXIP TPS data flow: Load Control → flight-event-mq-load-avro → FXD_SOAR_FlightData_Adapter → FlightKeys (V-speed calculation) → flight-event-fkys-avro (PR/PRF) → FXD_SOAR_Flightkeys_Event_Processor → FOS. V-speed card uplinked to cockpit via FXD_SOAR_Fusion_ACARS_Service.',
+    relatedTerms: ['v1', 'vr', 'v2', 'zfw', 'togw', 'flex-temp', 'toga', 'pr-prf'],
+  },
+  {
+    id: 'v1',
+    term: 'V1',
+    expansion: 'Takeoff Decision Speed',
+    category: 'flight-planning',
+    definition:
+      'The maximum speed at which the crew must initiate the first action to abort the takeoff and stop within the remaining runway. Above V1 the takeoff must continue. Determined from TOW, CG, runway length, obstacles, flap setting, and pressure altitude. Defined in FAA 14 CFR Part 25.107.',
+    source: 'FAA 14 CFR Part 25.107; ICAO Annex 6 Part I',
+    context:
+      'Part of the TPS output from FlightKeys (TakeoffPerformanceData.v1Speed). Transmitted to the cockpit via ACARS FTM uplink through FXD_SOAR_Fusion_ACARS_Service and filed in FOS as a PR entry.',
+    relatedTerms: ['tps', 'vr', 'v2', 'togw', 'flex-temp'],
+  },
+  {
+    id: 'vr',
+    term: 'VR',
+    expansion: 'Rotation Speed',
+    category: 'flight-planning',
+    definition:
+      'The speed at which the pilot applies back-pressure to raise the nose for liftoff. Must be at or above V1 and must allow the aircraft to reach V2 by 35 feet above the runway surface. Calculated from TOW, flap setting, and aircraft type.',
+    source: 'FAA 14 CFR Part 25.107',
+    context:
+      'Part of the TPS V-speed card from FlightKeys (TakeoffPerformanceData.vrSpeed). Included in the ACARS FTM uplink sent by FXD_SOAR_Fusion_ACARS_Service.',
+    relatedTerms: ['tps', 'v1', 'v2'],
+  },
+  {
+    id: 'v2',
+    term: 'V2',
+    expansion: 'Takeoff Safety Speed',
+    category: 'flight-planning',
+    definition:
+      'Minimum airspeed that must be maintained after engine failure during climb-out to guarantee required obstacle clearance gradient. Must be reached by 35 feet above runway surface. Drives flap retraction and initial climb-out pitch target.',
+    source: 'FAA 14 CFR Part 25.107',
+    context:
+      'Part of the TPS V-speed card (TakeoffPerformanceData.v2Speed). Posted to FOS in PR/PRF FlightKeys events and sent to cockpit via ACARS FTM uplink.',
+    relatedTerms: ['tps', 'v1', 'vr'],
+  },
+  {
+    id: 'zfw',
+    term: 'ZFW',
+    expansion: 'Zero Fuel Weight',
+    category: 'flight-planning',
+    definition:
+      'Total weight of the aircraft including all useful load (crew, passengers, cargo, baggage) but excluding all usable fuel. Primary structural weight reference and base input for both fuel planning and TPS calculations. MZFW (Maximum Zero Fuel Weight) is the certified structural limit.',
+    source: 'ICAO Annex 6; ARINC 633',
+    context:
+      'Published by Load Control in flight-event-mq-load-avro (LoadEvent.zeroFuelWeight). Consumed by FXD_SOAR_FlightData_Adapter and posted to FlightKeys as the primary TPS input alongside fuel on board.',
+    relatedTerms: ['tps', 'togw', 'v1'],
+  },
+  {
+    id: 'togw',
+    term: 'TOGW / TOW',
+    expansion: 'Takeoff Gross Weight / Takeoff Weight',
+    category: 'flight-planning',
+    definition:
+      'Total aircraft weight at brake release: ZFW + fuel on board. The single most important TPS input — determines V-speeds, required thrust, and usable runway length. MTOW (Maximum Takeoff Weight) is the certified upper limit.',
+    source: 'FAA 14 CFR Part 25; ICAO Annex 6',
+    context:
+      'Derived in FXIP as ZFW + FOB from the LoadEvent (estimatedTOW field). Posted to FlightKeys by FXD_SOAR_FlightData_Adapter to trigger V-speed calculation. Stored in TakeoffPerformanceData.takeoffWeight.',
+    relatedTerms: ['tps', 'zfw', 'v1', 'vr', 'v2'],
+  },
+  {
+    id: 'cg',
+    term: 'CG',
+    expansion: 'Center of Gravity',
+    category: 'flight-planning',
+    definition:
+      'Point at which the aircraft\'s total weight is considered to act. Expressed as a percentage of Mean Aerodynamic Chord (%MAC). CG position affects trim, stability, V-speeds, and structural weight limits. Computed by Load Control from seating, cargo placement, and fuel state.',
+    source: 'ICAO Annex 6; FAA AC 120-27',
+    context:
+      'Published in LoadEvent.cgPosition (flight-event-mq-load-avro). Posted to FlightKeys by FXD_SOAR_FlightData_Adapter as a TPS input. Stored in TakeoffPerformanceData.cgPercent.',
+    relatedTerms: ['tps', 'zfw', 'togw'],
+  },
+  {
+    id: 'flex-temp',
+    term: 'Flex Temp / Assumed Temperature',
+    category: 'flight-planning',
+    definition:
+      'An artificially elevated outside air temperature entered into the FMS to command reduced engine thrust below TOGA — extending engine life and saving fuel. Legal only when field-length and obstacle-clearance margins allow the reduced thrust. Also called "assumed temperature" or "derate by temperature".',
+    source: 'ICAO Annex 6 Part I; FAA AC 25.1591',
+    context:
+      'Computed by FlightKeys TPS and included in PR/PRF events (TakeoffPerformanceData.assumedTemperature). Sent to cockpit in the V-speed ACARS FTM uplink from FXD_SOAR_Fusion_ACARS_Service.',
+    relatedTerms: ['tps', 'toga', 'v1', 'vr', 'v2'],
+  },
+  {
+    id: 'toga',
+    term: 'TOGA',
+    expansion: 'Takeoff / Go-Around Thrust',
+    category: 'flight-planning',
+    definition:
+      'Maximum certified thrust rating for takeoff and go-around maneuvers. Selected when field-length performance is marginal, obstacles are limiting, or conditions require maximum thrust. Greater engine wear vs FLEX/derate settings.',
+    source: 'FAA 14 CFR Part 33; EASA CS-E',
+    context:
+      'One of the thrustMode enum values in TakeoffPerformanceData. FlightKeys selects TOGA when FLEX derate cannot maintain required performance margins.',
+    relatedTerms: ['tps', 'flex-temp'],
+  },
+  {
+    id: 'pr-prf',
+    term: 'PR / PRF',
+    expansion: 'Performance Report / Performance Report Filed',
+    category: 'platform',
+    definition:
+      'FlightKeys event types that carry TPS results to FOS. PR (Performance Report) = computed TPS values (V-speeds, thrust, flap, limiting factor) generated by FlightKeys after receiving load data. PRF (Performance Filed) = dispatcher-confirmed TPS values filed pre-departure, indicating the performance data has been reviewed and accepted.',
+    source: 'AA FXIP/SOAR internal platform',
+    context:
+      'Published on flight-event-fkys-avro by FlightKeys/OpsHub. Consumed by FXD_SOAR_Flightkeys_Event_Processor which posts PR/PRF entries to FOS. The authoritative TPS records in FXIP — required before crew can receive departure clearance.',
+    relatedTerms: ['tps', 'v1', 'vr', 'v2', 'flightkeys'],
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

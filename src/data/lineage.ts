@@ -391,6 +391,7 @@ export const kafkaTopics: KafkaTopic[] = [
     brokerType: 'Azure Event Hub',
     producers: ['OpsHub'],
     consumers: ['FXD_SOAR_FlightData_Adapter'],
+    notes: 'Pre-departure load/weight data (ZFW, TOW, CG, PAX). Primary TPS input — FDA posts to FlightKeys for V-speed and thrust derate calculation. FlightKeys then emits PR/PRF events back to FOS via flight-event-fkys-avro.',
   },
   // Maintenance event topics (AircraftData Adapter)
   {
@@ -982,7 +983,7 @@ export const NODE_COLORS: Record<NodeType | 'kafka' | 'external' | 'database', s
 // Sources: ACARS_Interface.xsd, OpsHub_FTM_Uplink_Swagger.yaml, Avro flight.avsc
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type DataDomain = 'flight' | 'flightplan' | 'aircraft' | 'acars' | 'fuel' | 'crew' | 'nav' | 'maintenance';
+export type DataDomain = 'flight' | 'flightplan' | 'aircraft' | 'acars' | 'fuel' | 'crew' | 'nav' | 'maintenance' | 'tps';
 
 export interface DataField {
   name: string;
@@ -1303,7 +1304,7 @@ export const dataObjects: DataObject[] = [
     id: 'FlightKeysEvent',
     name: 'FlightKeysEvent (Avro)',
     domain: 'nav',
-    description: 'FlightKeys operational event consumed by Flightkeys Event Processor. Triggers JPY (journey log), JPFF (fuel filed), PR (performance report), and PRF (performance filed) entries in FOS.',
+    description: 'FlightKeys operational event consumed by Flightkeys Event Processor. Triggers JPY (journey log), JPFF (fuel filed), PR (performance report — TPS result), and PRF (performance filed — dispatcher-confirmed TPS) entries in FOS.',
     source: 'com.aa.opshub.avro.flight.FlightEvent  (flight-event-fkys-avro)',
     format: 'Avro (binary)',
     usedBy: ['FXD_SOAR_Flightkeys_Event_Processor'],
@@ -1311,12 +1312,62 @@ export const dataObjects: DataObject[] = [
       { name: 'eventId',        type: 'string', required: true,  description: 'Unique event identifier' },
       { name: 'flightPlanId',   type: 'string', required: true,  description: 'FlightKeys unique flight identifier (FUFI)' },
       { name: 'flightNumber',   type: 'string', required: true,  description: 'Flight number' },
-      { name: 'eventType',      type: 'enum',   required: true,  description: 'FOS entry type to generate', enum: ['JPY','JPFF','PR','PRF','RELEASE','AMENDMENT'] },
+      { name: 'eventType',      type: 'enum',   required: true,  description: 'FOS entry type: JPY=journey log, JPFF=fuel filed, PR=TPS performance report (computed V-speeds/thrust), PRF=TPS performance filed (dispatcher confirmed)', enum: ['JPY','JPFF','PR','PRF','RELEASE','AMENDMENT'] },
       { name: 'timestamp',      type: 'long (epoch ms)', required: true, description: 'Event occurrence time' },
       { name: 'airlineCode',    type: 'string', required: true,  description: 'Airline IATA code', example: 'AA' },
       { name: 'departureICAO',  type: 'string', required: true,  description: 'Departure airport ICAO', example: 'KDFW' },
       { name: 'arrivalICAO',    type: 'string', required: true,  description: 'Arrival airport ICAO', example: 'KAUS' },
       { name: 'fuelData',       type: 'object', required: false, description: 'Fuel actuals (for JPY/JPFF entry types)' },
+      { name: 'tpsData',        type: 'object', required: false, description: 'TPS result (for PR/PRF types): v1Speed, vrSpeed, v2Speed, flapSetting, thrustMode, assumedTemperature, takeoffWeight, cgPercent, runwayId, limitingFactor' },
+    ],
+  },
+
+  // ── TakeoffPerformanceData — TPS output object ──────────────────────────
+  {
+    id: 'TakeoffPerformanceData',
+    name: 'TakeoffPerformanceData (TPS)',
+    domain: 'tps',
+    description: 'Takeoff performance calculation result produced by FlightKeys TPS engine. Derived from load event data (ZFW, TOW, CG, runway, weather). V-speeds and thrust setting are uplinked to the cockpit via ACARS (FTM) and filed in FOS as PR/PRF entries.',
+    source: 'FlightKeys TPS API / flight-event-fkys-avro (eventType=PR|PRF)',
+    format: 'JSON (FlightKeys) / ACARS text uplink',
+    usedBy: ['FXD_SOAR_FlightData_Adapter', 'FXD_SOAR_Flightkeys_Event_Processor', 'FXD_SOAR_Fusion_ACARS_Service'],
+    fields: [
+      { name: 'v1Speed',            type: 'integer (knots)',  required: true,  description: 'Decision speed — last point at which takeoff abort is safe', example: '145' },
+      { name: 'vrSpeed',            type: 'integer (knots)',  required: true,  description: 'Rotation speed — when to raise nose gear off runway', example: '148' },
+      { name: 'v2Speed',            type: 'integer (knots)',  required: true,  description: 'Takeoff safety speed — minimum climb-out speed after gear-up', example: '155' },
+      { name: 'flapSetting',        type: 'enum',             required: true,  description: 'Flap configuration selected for takeoff', enum: ['5','10','15','20','25'] },
+      { name: 'thrustMode',         type: 'enum',             required: true,  description: 'Engine thrust derate mode', enum: ['TOGA','FLEX','D1','D2','D3'] },
+      { name: 'assumedTemperature', type: 'integer (°C)',     required: false, description: 'Flex/assumed temperature used to reduce thrust — only valid if performance margins allow', example: '52' },
+      { name: 'takeoffWeight',      type: 'decimal (lbs)',    required: true,  description: 'Estimated (ETOW) or actual takeoff gross weight', example: '174000' },
+      { name: 'zeroFuelWeight',     type: 'decimal (lbs)',    required: true,  description: 'Aircraft + crew + passengers + cargo, excluding fuel', example: '158000' },
+      { name: 'cgPercent',          type: 'decimal (%MAC)',   required: true,  description: 'Center of gravity as percent of mean aerodynamic chord', example: '24.3' },
+      { name: 'runwayId',           type: 'string',           required: true,  description: 'Departure runway identifier', example: '17C' },
+      { name: 'limitingFactor',     type: 'enum',             required: false, description: 'Performance constraint that sizes the V-speeds', enum: ['FIELD','OBSTACLE','CLIMB','TIRE','BRAKE','STRUCTURAL'] },
+      { name: 'timestamp',          type: 'long (epoch ms)',  required: true,  description: 'Time TPS calculation was completed' },
+    ],
+  },
+
+  // ── LoadEvent — TPS input object ─────────────────────────────────────────
+  {
+    id: 'LoadEvent',
+    name: 'LoadEvent (Avro)',
+    domain: 'tps',
+    description: 'Pre-departure load/weight event from the Load Control system published by OpsHub to flight-event-mq-load-avro. Contains ZFW, ETOW, fuel on board, CG position, and payload breakdown. FlightData Adapter consumes this and posts to FlightKeys, which computes TPS (V-speeds, thrust derate) and emits PR/PRF events.',
+    source: 'com.aa.opshub.avro.flight.LoadEvent  (flight-event-mq-load-avro)',
+    format: 'Avro (binary)',
+    usedBy: ['FXD_SOAR_FlightData_Adapter'],
+    fields: [
+      { name: 'flightNumber',   type: 'string',          required: true,  description: 'AA flight number', example: 'AA5998' },
+      { name: 'tailNumber',     type: 'string',          required: true,  description: 'Aircraft tail number', example: 'N305AA' },
+      { name: 'departureICAO', type: 'string',           required: true,  description: 'Departure airport ICAO', example: 'KDFW' },
+      { name: 'zeroFuelWeight', type: 'decimal (lbs)',   required: true,  description: 'Load Control final close-out ZFW' },
+      { name: 'estimatedTOW',   type: 'decimal (lbs)',   required: true,  description: 'Estimated takeoff weight = ZFW + FOB' },
+      { name: 'fuelOnBoard',    type: 'decimal (lbs)',   required: true,  description: 'Fuel on board at departure gate per fueling records' },
+      { name: 'cgPosition',     type: 'decimal (%MAC)',  required: true,  description: 'Center of gravity position from final load sheet' },
+      { name: 'passengerCount', type: 'integer',         required: true,  description: 'Total boarding passenger count' },
+      { name: 'cargoWeight',    type: 'decimal (lbs)',   required: false, description: 'Belly cargo weight (bags + freight)' },
+      { name: 'loadVersion',    type: 'integer',         required: true,  description: 'Load sheet version/iteration number', example: '2' },
+      { name: 'timestamp',      type: 'long (epoch ms)', required: true,  description: 'Load event timestamp' },
     ],
   },
 ];
@@ -1612,4 +1663,96 @@ Content-Type: application/xml
     trigger: 'Flight plan messages consumed → ALP compresses and posts to OpsHub for long-term archive',
     description: 'ALP compresses Flight Plan, Weather, and OFP XML messages and sends to OpsHub Kafka archival topic for compliance storage.',
   },
+
+  // ── TPS (Takeoff Performance System) events ───────────────────────────────
+  {
+    id: 'fda-in-load-event',
+    name: 'Load Event Received (TPS Input)',
+    direction: 'incoming',
+    serviceId: 'FXD_SOAR_FlightData_Adapter',
+    topic: 'flight-event-mq-load-avro',
+    dataObjectId: 'LoadEvent',
+    format: 'Avro (Azure Event Hub)',
+    trigger: 'Load Control system final close-out before departure → OpsHub publishes LoadEvent',
+    description: 'Pre-departure weight/CG/passenger load event. FDA posts ZFW, ETOW, CG, and FOB to FlightKeys, which computes TPS (V-speeds, flap, thrust derate) and emits PR/PRF FlightKeysEvents.',
+    samplePayload: `{
+  "flightNumber": "AA5998",
+  "tailNumber": "N305AA",
+  "departureICAO": "KDFW",
+  "zeroFuelWeight": 158000,
+  "estimatedTOW": 174000,
+  "fuelOnBoard": 16000,
+  "cgPosition": 24.3,
+  "passengerCount": 158,
+  "cargoWeight": 4200,
+  "loadVersion": 2,
+  "timestamp": 1747620600000
+}`,
+  },
+  {
+    id: 'fep-in-tps-pr',
+    name: 'TPS Performance Report Event (PR)',
+    direction: 'incoming',
+    serviceId: 'FXD_SOAR_Flightkeys_Event_Processor',
+    topic: 'flight-event-fkys-avro',
+    dataObjectId: 'TakeoffPerformanceData',
+    format: 'Avro (Azure Event Hub)',
+    trigger: 'FlightKeys TPS engine completes V-speed/thrust calculation after receiving load data from FDA',
+    description: 'PR (Performance Report) event from FlightKeys. Contains computed V1, VR, V2, flap setting, thrust derate mode, and limiting factor. FEP posts a PR entry to FOS via OpsHub FTM FOS endpoint.',
+    samplePayload: `{
+  "eventId": "PR-AA5998-KDFW-20260518",
+  "flightPlanId": "TADYMX",
+  "flightNumber": "AA5998",
+  "eventType": "PR",
+  "timestamp": 1747620660000,
+  "airlineCode": "AA",
+  "departureICAO": "KDFW",
+  "arrivalICAO": "KAUS",
+  "tpsData": {
+    "v1Speed": 145,
+    "vrSpeed": 148,
+    "v2Speed": 155,
+    "flapSetting": "15",
+    "thrustMode": "FLEX",
+    "assumedTemperature": 52,
+    "takeoffWeight": 174000,
+    "zeroFuelWeight": 158000,
+    "cgPercent": 24.3,
+    "runwayId": "17C",
+    "limitingFactor": "CLIMB",
+    "timestamp": 1747620660000
+  }
+}`,
+  },
+  {
+    id: 'fep-in-tps-prf',
+    name: 'TPS Performance Filed Event (PRF)',
+    direction: 'incoming',
+    serviceId: 'FXD_SOAR_Flightkeys_Event_Processor',
+    topic: 'flight-event-fkys-avro',
+    dataObjectId: 'TakeoffPerformanceData',
+    format: 'Avro (Azure Event Hub)',
+    trigger: 'Dispatcher reviews and files (confirms) the TPS calculation in FlightKeys before departure clearance',
+    description: 'PRF (Performance Filed) event confirms that the dispatcher has reviewed and filed the TPS values. FEP posts a PRF entry to FOS. PRF is the final pre-departure TPS record — required before crew can receive departure clearance.',
+  },
+  {
+    id: 'fas-out-tps-acars-uplink',
+    name: 'TPS V-Speed Card Uplink → Aircraft',
+    direction: 'outgoing',
+    serviceId: 'FXD_SOAR_Fusion_ACARS_Service',
+    dataObjectId: 'TakeoffPerformanceData',
+    format: 'ACARS FTM text (formatted V-speed card)',
+    trigger: 'Dispatcher sends pre-departure TPS clearance from Fusion desktop → FAS → OpsHub FTM → IBM ACARS → aircraft',
+    description: 'V1/VR/V2 speeds, flap setting, thrust mode, and assumed temperature uplinked to cockpit printer via IBM ACARS as a formatted FTM (Free Text Message). Crew uses this to configure the FMC before departure.',
+    samplePayload: `POST /acars/uplink  (MessageType=FTM)
+
+TAKEOFF DATA
+RWY 17C  FLAPS 15
+FLEX TEMP 52C
+V1 145  VR 148  V2 155
+TOW 174.0K  CG 24.3%
+LIMIT: CLIMB
+CLEARED BY DISPATCH`,
+  },
 ];
+
