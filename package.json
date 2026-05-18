@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:package": "tsc -b && vite build --base=/lineage/",
+    "build:package": "tsc -b && vite build --base=/fxip-lineage/",
     "lint": "eslint .",
     "preview": "vite preview"
   },

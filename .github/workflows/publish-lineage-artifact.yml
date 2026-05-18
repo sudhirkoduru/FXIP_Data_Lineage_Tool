@@ -112,13 +112,16 @@ jobs:
         run: npm run build:package
 
       # ── 8. Create tarball ──────────────────────────────────────────────────────
-      # Contents of dist/ are archived directly (no wrapping folder) so that
-      # extracting into /usr/share/nginx/html/lineage/ gives the correct layout.
+      # Archive dist/ under a lineage/ prefix so the consumer (FlightInfo
+      # Dockerfile) can extract directly into /usr/share/nginx/html/ and the
+      # files land at the correct path: /usr/share/nginx/html/lineage/
       - name: Create artifact tarball
         run: |
           VERSION="${{ steps.appversion.outputs.BUILD_VERSION }}"
           TARBALL="${PACKAGE_NAME}-${VERSION}.tar.gz"
-          tar -czf "${TARBALL}" -C dist .
+          cp -r dist fxip-lineage
+          tar -czf "${TARBALL}" fxip-lineage
+          rm -rf fxip-lineage
           echo "TARBALL=${TARBALL}" >> "$GITHUB_ENV"
           echo "Size: $(du -sh ${TARBALL} | cut -f1)"
           tar -tzf "${TARBALL}"
