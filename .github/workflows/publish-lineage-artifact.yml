@@ -1,0 +1,181 @@
+name: 'Build & Publish Lineage Artifact'
+run-name: 'Build & Publish — ${{ inputs.IMAGE_VERSION || github.sha }}'
+
+on:
+  workflow_dispatch:
+    inputs:
+      IMAGE_VERSION:
+        required: false
+        type: string
+        description: 'Image/artifact version (auto-generated from SHA + date if blank)'
+        default: ''
+
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+
+env:
+  IMAGE_BASE_PATH: fxip
+  DOCKER_BUILD_REPO_NAME: fxip-data-lineage-tool
+  PACKAGE_NAME: fxip-data-lineage-tool
+  PACKAGE_REGISTRY: docker.aa.com
+  NPM_REGISTRY: https://npm.aa.com/prod/
+
+jobs:
+  build-and-publish:
+    name: Build → Package → Publish
+    runs-on: ubuntu-latest-aa
+
+    outputs:
+      build-version: ${{ steps.appversion.outputs.BUILD_VERSION }}
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Docker BuildX + layer cache ────────────────────────────────────
+      - name: Set up Docker Build
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # ── 3. Authenticate with AA Package Manager ──────────────────────────
+      - name: Package Manager Auth
+        id: authenticate
+        uses: AAInternal/package-manager-auth@v0.0.11
+
+      - name: Set credentials as environment variables
+        run: |
+          echo "PACKAGE_REGISTRY_USER=${{ steps.authenticate.outputs.PACKAGE_REGISTRY_USER }}" >> "$GITHUB_ENV"
+          echo "PACKAGE_REGISTRY_TOKEN=${{ steps.authenticate.outputs.PACKAGE_REGISTRY_TOKEN }}" >> "$GITHUB_ENV"
+          echo "NODE_AUTH_TOKEN=${{ steps.authenticate.outputs.PACKAGE_REGISTRY_TOKEN }}" >> "$GITHUB_ENV"
+
+      # ── 4. Cloudsmith Docker login ───────────────────────────────────────────
+      - name: Cloudsmith Login
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 #v3.3.0
+        with:
+          registry: ${{ env.PACKAGE_REGISTRY }}
+          username: ${{ steps.authenticate.outputs.PACKAGE_REGISTRY_USER }}
+          password: ${{ steps.authenticate.outputs.PACKAGE_REGISTRY_TOKEN }}
+
+      # ── 5. Resolve version ─────────────────────────────────────────────────
+      # Explicit input  →  used as-is  (e.g. "2.2.0")
+      # Auto-generated  →  "<sha>-<YYYY-MM-DD-HH-MM>"  (matches other FXIP services)
+      - name: Generate App Version
+        id: appversion
+        run: |
+          if [[ "${{ inputs.IMAGE_VERSION }}" != "" ]]; then
+            echo "BUILD_VERSION=${{ inputs.IMAGE_VERSION }}" >> $GITHUB_OUTPUT
+          else
+            echo "BUILD_VERSION=${{ github.sha }}-$(date +'%Y-%m-%d-%H-%M')" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Print App Version
+        run: echo "BUILD_VERSION: ${{ steps.appversion.outputs.BUILD_VERSION }}"
+
+      # ── 6. Node 22 + AA npm registry ──────────────────────────────────────────
+      - name: Use Node.js 22
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Setup .npmrc and Cloudsmith Auth
+        run: |
+          npm config set registry "${{ env.NPM_REGISTRY }}" --userconfig .npmrc
+          npm config set //npm.aa.com/prod/:_auth "$(echo -n "$PACKAGE_REGISTRY_USER:$PACKAGE_REGISTRY_TOKEN" | openssl enc -A -base64)" --userconfig .npmrc
+
+      - name: NPM Get Config
+        run: npm config get registry
+
+      - name: Verify npm auth
+        run: npm whoami --registry https://npm.aa.com/prod/
+
+      # ── 7. Install, type-check, build ─────────────────────────────────────────
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      # build:package passes --base=/lineage/ so all asset paths in dist/index.html
+      # are prefixed with /lineage/ — required for sub-path serving in Flight Info.
+      - name: Build with /lineage/ base path
+        run: npm run build:package
+
+      # ── 8. Create tarball ──────────────────────────────────────────────────────
+      # Contents of dist/ are archived directly (no wrapping folder) so that
+      # extracting into /usr/share/nginx/html/lineage/ gives the correct layout.
+      - name: Create artifact tarball
+        run: |
+          VERSION="${{ steps.appversion.outputs.BUILD_VERSION }}"
+          TARBALL="${PACKAGE_NAME}-${VERSION}.tar.gz"
+          tar -czf "${TARBALL}" -C dist .
+          echo "TARBALL=${TARBALL}" >> "$GITHUB_ENV"
+          echo "Size: $(du -sh ${TARBALL} | cut -f1)"
+          tar -tzf "${TARBALL}"
+
+      # ── 9. Upload tarball as workflow artifact (30-day retention) ──────────
+      - name: Upload tarball as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.TARBALL }}
+          path: ${{ env.TARBALL }}
+          retention-days: 30
+
+      # ── 10. Publish raw tarball to Cloudsmith non-prod ─────────────────────
+      # Flight Info CI downloads this artifact via the Cloudsmith REST API or CLI:
+      #   cloudsmith dl fxip/non-prod/fxip-data-lineage-tool/<version>
+      - name: Publish raw artifact to Cloudsmith (non-prod)
+        run: |
+          pip install --quiet cloudsmith-cli
+          cloudsmith push raw \
+            --api-key="${PACKAGE_REGISTRY_TOKEN}" \
+            fxip/non-prod \
+            "${TARBALL}" \
+            --name "${PACKAGE_NAME}" \
+            --version "${{ steps.appversion.outputs.BUILD_VERSION }}" \
+            --description "FXIP Data Lineage Tool — static build (base: /lineage/) — ${GITHUB_REF_NAME}@${GITHUB_SHA::7}" \
+            --content-type "application/gzip" \
+            --tags "fxip,lineage,frontend"
+
+      # ── 11. Build & push Docker image to Cloudsmith non-prod ───────────────
+      # Uses the same publish-docker-action pattern as all other FXIP services.
+      # Builds from Dockerfile in repo root (node:22-alpine + nginx:1.28-alpine).
+      # Image served standalone at /  — separate from the /lineage/ sub-path build.
+      - name: Push Docker Image to Cloudsmith (non-prod)
+        if: ${{ github.event_name != 'pull_request' }}
+        id: build-image
+        uses: AAInternal/publish-docker-action@v0.3.0
+        with:
+          APPLICATION_NAME: ${{ env.IMAGE_BASE_PATH }}/${{ env.DOCKER_BUILD_REPO_NAME }}
+          APPLICATION_VERSION: ${{ steps.appversion.outputs.BUILD_VERSION }}
+          REPOSITORY: nonprod
+
+      # ── 12. Job summary ─────────────────────────────────────────────────────
+      - name: Write job summary
+        run: |
+          VERSION="${{ steps.appversion.outputs.BUILD_VERSION }}"
+          echo "## Lineage Artifact Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | \`${PACKAGE_NAME}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | \`${VERSION}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tarball | \`${TARBALL}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cloudsmith raw | \`fxip/non-prod / ${PACKAGE_NAME}@${VERSION}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker image | \`${PACKAGE_REGISTRY}/nonprod/${IMAGE_BASE_PATH}/${DOCKER_BUILD_REPO_NAME}:${VERSION}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ref | \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::7}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tarball contents" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          tar -tzf "${TARBALL}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
