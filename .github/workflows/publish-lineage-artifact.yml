@@ -106,22 +106,19 @@ jobs:
       - name: TypeScript type check
         run: npx tsc --noEmit
 
-      # build:package passes --base=/lineage/ so all asset paths in dist/index.html
-      # are prefixed with /lineage/ — required for sub-path serving in Flight Info.
-      - name: Build with /lineage/ base path
+      # build:package passes --base=/fxip-lineage/ so all asset paths in dist/index.html
+      # are prefixed with /fxip-lineage/ — required for sub-path serving in Flight Info.
+      - name: Build with /fxip-lineage/ base path
         run: npm run build:package
 
       # ── 8. Create tarball ──────────────────────────────────────────────────────
-      # Archive dist/ under a lineage/ prefix so the consumer (FlightInfo
-      # Dockerfile) can extract directly into /usr/share/nginx/html/ and the
-      # files land at the correct path: /usr/share/nginx/html/lineage/
+      # Contents of dist/ are archived directly (no wrapping folder) so that
+      # extracting into /usr/share/nginx/html/fxip-lineage/ gives the correct layout.
       - name: Create artifact tarball
         run: |
           VERSION="${{ steps.appversion.outputs.BUILD_VERSION }}"
           TARBALL="${PACKAGE_NAME}-${VERSION}.tar.gz"
-          cp -r dist fxip-lineage
-          tar -czf "${TARBALL}" fxip-lineage
-          rm -rf fxip-lineage
+          tar -czf "${TARBALL}" -C dist .
           echo "TARBALL=${TARBALL}" >> "$GITHUB_ENV"
           echo "Size: $(du -sh ${TARBALL} | cut -f1)"
           tar -tzf "${TARBALL}"
@@ -146,14 +143,14 @@ jobs:
             "${TARBALL}" \
             --name "${PACKAGE_NAME}" \
             --version "${{ steps.appversion.outputs.BUILD_VERSION }}" \
-            --description "FXIP Data Lineage Tool — static build (base: /lineage/) — ${GITHUB_REF_NAME}@${GITHUB_SHA::7}" \
+            --description "FXIP Data Lineage Tool — static build (base: /fxip-lineage/) — ${GITHUB_REF_NAME}@${GITHUB_SHA::7}" \
             --content-type "application/gzip" \
             --tags "fxip,lineage,frontend"
 
       # ── 11. Build & push Docker image to Cloudsmith non-prod ───────────────
       # Uses the same publish-docker-action pattern as all other FXIP services.
       # Builds from Dockerfile in repo root (node:22-alpine + nginx:1.28-alpine).
-      # Image served standalone at /  — separate from the /lineage/ sub-path build.
+      # Image served standalone at /  — separate from the /fxip-lineage/ sub-path build.
       - name: Push Docker Image to Cloudsmith (non-prod)
         if: ${{ github.event_name != 'pull_request' }}
         id: build-image

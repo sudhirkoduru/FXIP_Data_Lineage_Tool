@@ -14,38 +14,51 @@ const Header: React.FC<HeaderProps> = ({ searchValue, onSearchChange }) => {
   return (
     <header
       style={{
-        height: 58,
-        background: "#0C2340",
-        borderBottom: "3px solid #ED1C2E",
+        height: 60,
+        background: "#004b87",
+        borderBottom: "3px solid #c8102e",
         display: "flex",
         alignItems: "center",
-        padding: "0 20px",
+        padding: "0 24px",
         gap: 20,
         flexShrink: 0,
         zIndex: 100,
+        boxSizing: "border-box",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
       }}
     >
-      {/* AA Logo image */}
+      {/* AA Logo — dual-logo pill matching Flight Info Service */}
       <div
         style={{
+          background: "#ffffff",
+          borderRadius: 6,
+          padding: "4px 10px",
           display: "flex",
           alignItems: "center",
-          gap: 14,
+          gap: 0,
+          marginRight: 14,
           flexShrink: 0,
-          borderRight: "1px solid rgba(255,255,255,0.12)",
-          paddingRight: 20,
-          height: "100%",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
         }}
       >
         <img
-          src="/aa-logo.png"
+          src={`${import.meta.env.BASE_URL}American-Airlines.png`}
           alt="American Airlines"
+          style={{ height: 28, width: "auto", display: "block" }}
+        />
+        <div
           style={{
-            height: 34,
-            width: "auto",
-            objectFit: "contain",
-            display: "block",
+            width: 1,
+            height: 22,
+            background: "rgba(12,35,64,0.18)",
+            margin: "0 8px",
+            flexShrink: 0,
           }}
+        />
+        <img
+          src={`${import.meta.env.BASE_URL}aa-logo.png`}
+          alt="American Airlines Centennial"
+          style={{ height: 34, width: "auto", display: "block" }}
         />
       </div>
 
@@ -73,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({ searchValue, onSearchChange }) => {
             gap: 7,
           }}
         >
-          <Plane size={15} color="#ED1C2E" style={{ transform: "rotate(45deg)" }} />
+          <Plane size={15} color="#c8102e" style={{ transform: "rotate(45deg)" }} />
           Data Lineage Tool
         </div>
       </div>
@@ -105,7 +118,7 @@ const Header: React.FC<HeaderProps> = ({ searchValue, onSearchChange }) => {
             color: "#e2e8f0",
             fontSize: 13,
             flex: 1,
-            caretColor: "#ED1C2E",
+            caretColor: "#c8102e",
           }}
         />
         {searchValue && (
@@ -143,7 +156,7 @@ const Header: React.FC<HeaderProps> = ({ searchValue, onSearchChange }) => {
           { n: externalSystems.length, label: "External" },
         ].map(({ n, label }) => (
           <div key={label} style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#009FDA", lineHeight: 1 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#1097c8", lineHeight: 1 }}>
               {n}
             </div>
             <div

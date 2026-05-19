@@ -48,7 +48,7 @@ const InfoRow = ({ label, value, mono }: { label: string; value?: string; mono?:
 // ── Method badge ─────────────────────────────────────────────────────────────
 const METHOD_COLORS: Record<string, string> = {
   GET: "#10B981", POST: "#0078D2", PUT: "#F59E0B",
-  DELETE: "#ED1C2E", PATCH: "#8B5CF6", "GET/POST": "#0EA5E9",
+  DELETE: "#c8102e", PATCH: "#8B5CF6", "GET/POST": "#0EA5E9",
   "GET/POST/PUT/DELETE": "#F59E0B",
 };
 
@@ -188,7 +188,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
               <a
                 href={"https://github.com/" + svc.repo}
                 target="_blank" rel="noreferrer"
-                style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#009FDA", fontSize: 12, marginTop: 6, textDecoration: "none" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#1097c8", fontSize: 12, marginTop: 6, textDecoration: "none" }}
               >
                 <ExternalLink size={12} /> {svc.repo}
               </a>
@@ -218,11 +218,11 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                 {svcProducedTopics.map(t => (
                   <div key={t.id} style={{
                     background: "#1a0a0a", borderRadius: 7, padding: "7px 10px",
-                    marginBottom: 6, borderLeft: "3px solid #ED1C2E",
+                    marginBottom: 6, borderLeft: "3px solid #c8102e",
                   }}>
                     <div style={{ fontSize: 11, fontFamily: "monospace", color: "#fca5a5", fontWeight: 700 }}>{t.name}</div>
                     <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                      <Tag text={t.format}     color="#ED1C2E" />
+                      <Tag text={t.format}     color="#c8102e" />
                       <Tag text={t.brokerType} color="#F59E0B" />
                       <Tag text={t.partitions + " parts"} color="#64748b" />
                     </div>
@@ -280,7 +280,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
             {calledByServices.length > 0 && (
               <Section icon={<Layers size={12} />} title="Called By">
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {calledByServices.map(s => <Tag key={s.id} text={s.acronym} color="#009FDA" />)}
+                  {calledByServices.map(s => <Tag key={s.id} text={s.acronym} color="#1097c8" />)}
                 </div>
               </Section>
             )}
@@ -289,7 +289,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
             {svc.calls.length > 0 && (
               <Section icon={<Package size={12} />} title="Calls">
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {svc.calls.map(c => <Tag key={c} text={c} color="#009FDA" />)}
+                  {svc.calls.map(c => <Tag key={c} text={c} color="#1097c8" />)}
                 </div>
               </Section>
             )}
@@ -317,7 +317,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
             return (
               <div style={{
                 background: "var(--c-bg-elevated)", borderRadius: 8, marginBottom: 10,
-                borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#ED1C2E'}`,
+                borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#c8102e'}`,
                 overflow: "hidden",
               }}>
                 <div style={{ padding: "10px 12px" }}>
@@ -461,13 +461,13 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
                       <div key={ev.id} style={{
                         background: ev.direction === 'incoming' ? "#0d0a1a" : "#1a0a0a",
                         borderRadius: 7, padding: "8px 10px", marginBottom: 7,
-                        borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#ED1C2E'}`,
+                        borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#c8102e'}`,
                       }}>
                         <div style={{ display: "flex", gap: 7, alignItems: "center", marginBottom: 4 }}>
                           <span style={{
-                            fontSize: 9, background: ev.direction === 'incoming' ? '#7C3AED22' : '#ED1C2E22',
+                            fontSize: 9, background: ev.direction === 'incoming' ? '#7C3AED22' : '#c8102e22',
                             color: ev.direction === 'incoming' ? '#c4b5fd' : '#fca5a5',
-                            border: `1px solid ${ev.direction === 'incoming' ? '#7C3AED44' : '#ED1C2E44'}`,
+                            border: `1px solid ${ev.direction === 'incoming' ? '#7C3AED44' : '#c8102e44'}`,
                             borderRadius: 5, padding: "1px 5px", fontWeight: 700,
                           }}>{ev.direction}</span>
                           <span style={{ fontSize: 11, fontWeight: 700, color: "var(--c-text-1)" }}>{svcName}</span>
@@ -485,7 +485,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
             {topicProducers.length > 0 && (
               <Section icon={<ArrowUpRight size={12} />} title={"Producers  (" + topicProducers.length + ")"}>
                 {topicProducers.map(s => (
-                  <div key={s.id} style={{ background: "#1a0a0a", borderRadius: 7, padding: "7px 10px", marginBottom: 6, borderLeft: "3px solid #ED1C2E" }}>
+                  <div key={s.id} style={{ background: "#1a0a0a", borderRadius: 7, padding: "7px 10px", marginBottom: 6, borderLeft: "3px solid #c8102e" }}>
                     <div style={{ fontWeight: 700, color: "#fca5a5", fontSize: 12 }}>{s.acronym}</div>
                     <div style={{ fontSize: 11, color: "var(--c-text-muted)" }}>{s.name}</div>
                   </div>
@@ -552,7 +552,7 @@ const Sidebar: React.FC<Props> = ({ node, onClose }) => {
             {ext.url && (
               <a
                 href={ext.url} target="_blank" rel="noreferrer"
-                style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#009FDA", fontSize: 12, marginTop: 14, textDecoration: "none" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#1097c8", fontSize: 12, marginTop: 14, textDecoration: "none" }}
               >
                 <ExternalLink size={12} /> {ext.url}
               </a>

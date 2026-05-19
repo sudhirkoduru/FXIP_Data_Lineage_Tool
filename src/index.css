@@ -1,9 +1,9 @@
 /* American Airlines brand theme */
 :root, [data-theme="dark"] {
   /* Brand (unchanged by theme) */
-  --aa-navy:    #0C2340;
-  --aa-red:     #ED1C2E;
-  --aa-sky:     #009FDA;
+  --aa-navy:    #004b87;
+  --aa-red:     #c8102e;
+  --aa-sky:     #1097c8;
 
   /* Structural theme colors — dark mode */
   --c-bg-app:      #060e1c;

@@ -8,7 +8,7 @@ const DOMAIN_META: Record<DataDomain, { label: string; color: string; icon: stri
   flight:      { label: 'Flight',       color: '#0078D2', icon: '✈' },
   flightplan:  { label: 'Flight Plan',  color: '#7C3AED', icon: '📋' },
   aircraft:    { label: 'Aircraft',     color: '#0EA5E9', icon: '🛩' },
-  acars:       { label: 'ACARS',        color: '#ED1C2E', icon: '📡' },
+  acars:       { label: 'ACARS',        color: '#c8102e', icon: '📡' },
   fuel:        { label: 'Fuel',         color: '#F59E0B', icon: '⛽' },
   crew:        { label: 'Crew',         color: '#10B981', icon: '👤' },
   nav:         { label: 'Navigation',   color: '#14B8A6', icon: '🗺' },
@@ -97,22 +97,22 @@ const EventRow = ({ ev }: { ev: typeof domainEvents[0] }) => {
   return (
     <div style={{
       background: 'var(--c-bg-elevated)', borderRadius: 8, padding: '10px 12px', marginBottom: 8,
-      borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#ED1C2E'}`,
+      borderLeft: `3px solid ${ev.direction === 'incoming' ? '#7C3AED' : '#c8102e'}`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
         {ev.direction === 'incoming'
           ? <ArrowDownLeft size={13} color="#7C3AED" />
-          : <ArrowUpRight size={13} color="#ED1C2E" />}
+          : <ArrowUpRight size={13} color="#c8102e" />}
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-1)' }}>{ev.name}</span>
         <span style={{
-          fontSize: 10, background: ev.direction === 'incoming' ? '#7C3AED22' : '#ED1C2E22',
+          fontSize: 10, background: ev.direction === 'incoming' ? '#7C3AED22' : '#c8102e22',
           color: ev.direction === 'incoming' ? 'var(--c-ev-in-text)' : 'var(--c-ev-out-text)',
-          border: `1px solid ${ev.direction === 'incoming' ? '#7C3AED44' : '#ED1C2E44'}`,
+          border: `1px solid ${ev.direction === 'incoming' ? '#7C3AED44' : '#c8102e44'}`,
           borderRadius: 5, padding: '1px 6px',
         }}>{ev.direction}</span>
       </div>
       {svc && (
-        <div style={{ fontSize: 11, color: '#009FDA', marginBottom: 4 }}>
+        <div style={{ fontSize: 11, color: '#1097c8', marginBottom: 4 }}>
           {svc.acronym} — {svc.name}
         </div>
       )}
@@ -338,7 +338,7 @@ const ServiceDetailPanel = ({ svc }: { svc: Service }) => {
             )}
             {svc.kafkaProduces.length > 0 && (
               <div>
-                <div style={{ fontSize: 10, color: '#ED1C2E', fontWeight: 700, marginBottom: 6 }}>↑ Produces ({svc.kafkaProduces.length})</div>
+                <div style={{ fontSize: 10, color: '#c8102e', fontWeight: 700, marginBottom: 6 }}>↑ Produces ({svc.kafkaProduces.length})</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                   {svc.kafkaProduces.map(t => <div key={t} style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--c-topic-text)', background: 'var(--c-topic-bg)', borderRadius: 4, padding: '2px 8px' }}>{t}</div>)}
                 </div>
@@ -436,7 +436,7 @@ const DataCatalog: React.FC = () => {
               flex: 1, padding: '12px 0', fontSize: 12, fontWeight: tab === t ? 800 : 500,
               color: tab === t ? 'var(--c-text-1)' : 'var(--c-text-muted)',
               background: 'none', border: 'none', cursor: 'pointer',
-              borderBottom: tab === t ? '2px solid #009FDA' : '2px solid transparent',
+              borderBottom: tab === t ? '2px solid #1097c8' : '2px solid transparent',
               transition: 'all 0.15s',
             }}>{label}</button>
           ))}

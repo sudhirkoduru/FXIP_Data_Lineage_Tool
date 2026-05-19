@@ -197,7 +197,7 @@ const buildLanes = (): Node[] => [
     // KAFKA_Y_BASE=1010; lane top y=955 → 55px header clearance; 35px gap below azure
     id: 'lane-kafka', type: 'laneNode', selectable: false, draggable: false, zIndex: -10,
     position: { x: -30, y: 965 },
-    data: { label: 'OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', sideLabel: 'Apache Kafka /\nAzure Event Hub', color: '#ED1C2E09', border: '#ED1C2E', width: CANVAS_W, height: 610, iconKey: 'kafka' } as LaneData,
+    data: { label: 'OpsHub · Azure Event Hub  —  Kafka Backbone  (AMQP / Confluent Cloud / AWS MSK)', sideLabel: 'Apache Kafka /\nAzure Event Hub', color: '#c8102e09', border: '#c8102e', width: CANVAS_W, height: 610, iconKey: 'kafka' } as LaneData,
   },
   {
     // On-prem nodes at y=1640; lane top y=1595 → 45px header clearance; 40px gap below kafka
@@ -243,7 +243,7 @@ const ServiceNode = ({ data }: { data: SvcData }) => (
         </span>
       )}
       {data.kafkaOut > 0 && (
-        <span style={{ background: '#ED1C2E33', borderRadius: 10, padding: '2px 7px', fontSize: 9 }}>
+        <span style={{ background: '#c8102e33', borderRadius: 10, padding: '2px 7px', fontSize: 9 }}>
           ↑{data.kafkaOut} Kafka
         </span>
       )}
@@ -256,9 +256,9 @@ interface KafkaData { label: string; group: string; format: string; brokerType: 
 const KafkaNode = ({ data }: { data: KafkaData }) => (
   <div style={{
     background: 'linear-gradient(135deg, #991b1b, #7f1d1d)',
-    border: '1.5px solid #ED1C2E',
+    border: '1.5px solid #c8102e',
     borderRadius: 6, padding: '5px 10px', minWidth: 215, maxWidth: 255,
-    boxShadow: '0 0 10px #ED1C2E44, 0 3px 10px rgba(0,0,0,0.5)',
+    boxShadow: '0 0 10px #c8102e44, 0 3px 10px rgba(0,0,0,0.5)',
     color: '#fff', cursor: 'pointer', textAlign: 'center',
   }}>
     <Handle type="target" position={Position.Left}   style={{ background: '#ffffff55', border: 'none' }} />
@@ -422,7 +422,7 @@ function buildEdges(filter: string[], isDark: boolean): Edge[] {
     if (!kafkaOk) return;
     topic.producers.forEach(prod => {
       if (svcMap.has(prod) && svcVisible(prod))
-        addEdge(prod, topic.id, '#ED1C2E', true, 'publishes');
+        addEdge(prod, topic.id, '#c8102e', true, 'publishes');
       else if (extIds.has(prod) && extOk)
         addEdge(prod, topic.id, '#F59E0B', true, 'publishes');
     });
@@ -440,7 +440,7 @@ function buildEdges(filter: string[], isDark: boolean): Edge[] {
     });
     svc.calls.forEach(targetId => {
       if (svcMap.has(targetId) && svcVisible(targetId))
-        addEdge(svc.id, targetId, '#009FDA', false, 'calls');
+        addEdge(svc.id, targetId, '#1097c8', false, 'calls');
       else if (extIds.has(targetId) && extOk)
         addEdge(svc.id, targetId, '#10B981', false, undefined, true);
     });
@@ -502,9 +502,9 @@ const Graph: React.FC<GraphProps> = ({ filter, searchTerm, onNodeClick }) => {
           Data Flow Legend
         </div>
         {[
-          { color: '#ED1C2E', label: 'Kafka publish (animated)',  dashed: false, animated: true  },
+          { color: '#c8102e', label: 'Kafka publish (animated)',  dashed: false, animated: true  },
           { color: '#7C3AED', label: 'Kafka consume',             dashed: false, animated: false },
-          { color: '#009FDA', label: 'Service → Service (calls)', dashed: false, animated: false },
+          { color: '#1097c8', label: 'Service → Service (calls)', dashed: false, animated: false },
           { color: '#10B981', label: 'External integration',      dashed: true,  animated: false },
           { color: '#F59E0B', label: 'External → Kafka publish',  dashed: false, animated: true  },
         ].map(({ color, label, dashed }) => (

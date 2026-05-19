@@ -966,7 +966,7 @@ export const services: Service[] = [
 ];
 
 // ── Node colors — aligned with AA brand palette ───────────────────────────────
-// AA Navy: #0C2340  AA Red: #ED1C2E  AA Sky: #009FDA
+// AA Navy: #004b87  AA Red: #c8102e  AA Sky: #1097c8
 export const NODE_COLORS: Record<NodeType | 'kafka' | 'external' | 'database', string> = {
   api:       '#0078D2', // AA medium blue  — Services / APIs
   processor: '#7C3AED', // violet          — Processors (distinct)

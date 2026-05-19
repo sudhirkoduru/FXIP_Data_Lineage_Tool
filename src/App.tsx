@@ -7,6 +7,7 @@ import Graph from "./components/Graph";
 import Sidebar from "./components/Sidebar";
 import DataCatalog from "./components/DataCatalog";
 import Glossary from "./components/Glossary";
+import Footer from "./components/Footer";
 
 function AppInner() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -35,6 +36,7 @@ function AppInner() {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

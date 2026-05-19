@@ -31,7 +31,7 @@ export interface GlossaryTerm {
 
 export const CATEGORY_META: Record<GlossaryCategory, { label: string; color: string; icon: string }> = {
   aviation:        { label: 'Aviation Ops',     color: '#0078D2', icon: '✈' },
-  acars:           { label: 'ACARS',            color: '#ED1C2E', icon: '📡' },
+  acars:           { label: 'ACARS',            color: '#c8102e', icon: '📡' },
   fuel:            { label: 'Fuel',             color: '#F59E0B', icon: '⛽' },
   'flight-planning': { label: 'Flight Planning', color: '#7C3AED', icon: '📋' },
   platform:        { label: 'Platform / AA',    color: '#10B981', icon: '🏗' },

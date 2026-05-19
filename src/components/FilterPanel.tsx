@@ -135,10 +135,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange, currentView
               onClick={() => onViewChange(id)}
               style={{
                 display: "flex", alignItems: "center", gap: 9, width: "100%",
-                background: currentView === id ? "#009FDA1a" : "transparent",
-                border: `1px solid ${currentView === id ? "#009FDA66" : "var(--c-border)"}`,
+                background: currentView === id ? "#1097c81a" : "transparent",
+                border: `1px solid ${currentView === id ? "#1097c866" : "var(--c-border)"}`,
                 borderRadius: 7, padding: "8px 10px", cursor: "pointer",
-                color: currentView === id ? "#009FDA" : "var(--c-text-2)",
+                color: currentView === id ? "#1097c8" : "var(--c-text-2)",
                 fontSize: 12, fontWeight: currentView === id ? 700 : 500,
                 marginBottom: 5, textAlign: "left", transition: "all 0.15s",
               }}
@@ -199,7 +199,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange, currentView
               background: "transparent",
               border: "1px solid var(--c-border)",
               borderRadius: 7,
-              color: "#ED1C2E",
+              color: "#c8102e",
               fontSize: 11, padding: "6px 0",
               cursor: "pointer", fontWeight: 600,
             }}
@@ -218,7 +218,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ active, onChange, currentView
           Edge Legend
         </div>
         {[
-          { color: "#ED1C2E", label: "produces → topic"    },
+          { color: "#c8102e", label: "produces → topic"    },
           { color: "#7C3AED", label: "consumes from topic" },
           { color: "#10B981", label: "→ external system"   },
           { color: "#0078D2", label: "→ calls service"     },
